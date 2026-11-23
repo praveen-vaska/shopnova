@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-manrope: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  --color-primary: #171717;
+  --color-secondary: #F7F5F0;
+  --color-accent: #C6A477;
+  --color-accent-hover: #B39164;
+  --color-surface: #F3F1ED;
+  --color-text: #202020;
+  --color-muted: #777777;
+  --color-border: #E9E6E0;
+  --color-success: #23865B;
+  --color-error: #D94A4A;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-inter);
+}
+
+body {
+  color: #202020;
+  background-color: #FFFFFF;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-manrope);
+  letter-spacing: -0.02em;
+}
+
+/* Luxury Custom Cursor (Single Smooth Follower - No Bullseye) */
+.luxury-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  background-color: rgba(198, 164, 119, 0.2);
+  border: 1.5px solid rgba(198, 164, 119, 0.65);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform, width, height;
+  backdrop-filter: blur(1px);
+  transition: width 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              opacity 0.2s ease;
+}
+
+.luxury-cursor.mode-link {
+  width: 46px;
+  height: 46px;
+  background-color: rgba(23, 23, 23, 0.08);
+  border: 1.5px solid #171717;
+}
+
+.luxury-cursor.mode-product {
+  width: 72px;
+  height: 72px;
+  background-color: #171717;
+  border-color: transparent;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.luxury-cursor.mode-drag {
+  width: 66px;
+  height: 66px;
+  background-color: #C6A477;
+  border-color: transparent;
+  box-shadow: 0 10px 22px rgba(198, 164, 119, 0.35);
+}
+
+.cursor-text {
+  color: #FFFFFF;
+  font-family: var(--font-manrope);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  user-select: none;
+  pointer-events: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .luxury-cursor {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .luxury-cursor {
+    display: none !important;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F3F1ED;
+}
+::-webkit-scrollbar-thumb {
+  background: #D4D0C7;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #777777;
+}
+
+/* Skeleton Loading Animation */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #F0EDE8 25%, #F8F6F2 50%, #F0EDE8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: floatGentle 4.5s ease-in-out infinite;
+}
+
+@keyframes slideProgress {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
