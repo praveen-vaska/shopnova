@@ -28,22 +28,22 @@ export function ShopProvider({ children }) {
   // Load from LocalStorage on mount
   useEffect(() => {
     try {
-      const storedCart = localStorage.getItem('shopnova_cart');
+      const storedCart = localStorage.getItem('shipflux_cart');
       if (storedCart) setCart(JSON.parse(storedCart));
 
-      const storedWishlist = localStorage.getItem('shopnova_wishlist');
+      const storedWishlist = localStorage.getItem('shipflux_wishlist');
       if (storedWishlist) setWishlist(JSON.parse(storedWishlist));
 
-      const storedUser = localStorage.getItem('shopnova_user');
+      const storedUser = localStorage.getItem('shipflux_user');
       if (storedUser) setUser(JSON.parse(storedUser));
 
-      const storedOrders = localStorage.getItem('shopnova_orders');
+      const storedOrders = localStorage.getItem('shipflux_orders');
       if (storedOrders) setOrders(JSON.parse(storedOrders));
 
-      const storedProducts = localStorage.getItem('shopnova_products');
+      const storedProducts = localStorage.getItem('shipflux_products');
       if (storedProducts) setProducts(JSON.parse(storedProducts));
 
-      const storedCoupons = localStorage.getItem('shopnova_coupons');
+      const storedCoupons = localStorage.getItem('shipflux_coupons');
       if (storedCoupons) setCoupons(JSON.parse(storedCoupons));
     } catch (e) {
       console.error("Failed to load local state", e);
@@ -53,20 +53,20 @@ export function ShopProvider({ children }) {
   // Save to LocalStorage
   const updateCart = (newCart) => {
     setCart(newCart);
-    localStorage.setItem('shopnova_cart', JSON.stringify(newCart));
+    localStorage.setItem('shipflux_cart', JSON.stringify(newCart));
   };
 
   const updateWishlist = (newWishlist) => {
     setWishlist(newWishlist);
-    localStorage.setItem('shopnova_wishlist', JSON.stringify(newWishlist));
+    localStorage.setItem('shipflux_wishlist', JSON.stringify(newWishlist));
   };
 
   const updateUser = (newUser) => {
     setUser(newUser);
     if (newUser) {
-      localStorage.setItem('shopnova_user', JSON.stringify(newUser));
+      localStorage.setItem('shipflux_user', JSON.stringify(newUser));
     } else {
-      localStorage.removeItem('shopnova_user');
+      localStorage.removeItem('shipflux_user');
     }
   };
 
@@ -267,7 +267,7 @@ export function ShopProvider({ children }) {
 
     const updatedOrders = [newOrder, ...orders];
     setOrders(updatedOrders);
-    localStorage.setItem('shopnova_orders', JSON.stringify(updatedOrders));
+    localStorage.setItem('shipflux_orders', JSON.stringify(updatedOrders));
     clearCart();
     return newOrder;
   };
@@ -279,7 +279,7 @@ export function ShopProvider({ children }) {
     const created = { ...newProduct, id, slug };
     const updated = [created, ...products];
     setProducts(updated);
-    localStorage.setItem('shopnova_products', JSON.stringify(updated));
+    localStorage.setItem('shipflux_products', JSON.stringify(updated));
     showToast(`Product "${created.name}" created successfully!`, 'success');
     return created;
   };
@@ -287,7 +287,7 @@ export function ShopProvider({ children }) {
   const updateProduct = (id, updatedFields) => {
     const updated = products.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
     setProducts(updated);
-    localStorage.setItem('shopnova_products', JSON.stringify(updated));
+    localStorage.setItem('shipflux_products', JSON.stringify(updated));
     showToast("Product updated successfully!", 'success');
   };
 
@@ -295,7 +295,7 @@ export function ShopProvider({ children }) {
     const prod = products.find(p => p.id === id);
     const updated = products.filter((p) => p.id !== id);
     setProducts(updated);
-    localStorage.setItem('shopnova_products', JSON.stringify(updated));
+    localStorage.setItem('shipflux_products', JSON.stringify(updated));
     showToast(`Product "${prod?.name || id}" removed`, 'info');
   };
 
@@ -317,21 +317,21 @@ export function ShopProvider({ children }) {
       return ord;
     });
     setOrders(updated);
-    localStorage.setItem('shopnova_orders', JSON.stringify(updated));
+    localStorage.setItem('shipflux_orders', JSON.stringify(updated));
     showToast(`Order ${orderId} status updated to ${newStatus}`, 'success');
   };
 
   const addCoupon = (newCoupon) => {
     const updated = [...coupons, newCoupon];
     setCoupons(updated);
-    localStorage.setItem('shopnova_coupons', JSON.stringify(updated));
+    localStorage.setItem('shipflux_coupons', JSON.stringify(updated));
     showToast(`Coupon "${newCoupon.code}" created!`, 'success');
   };
 
   const toggleCouponStatus = (code) => {
     const updated = coupons.map(c => c.code === code ? { ...c, isActive: !c.isActive } : c);
     setCoupons(updated);
-    localStorage.setItem('shopnova_coupons', JSON.stringify(updated));
+    localStorage.setItem('shipflux_coupons', JSON.stringify(updated));
   };
 
   return (

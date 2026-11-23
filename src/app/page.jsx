@@ -32,7 +32,7 @@ export default function HomePage() {
               <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl border border-borderSubtle bg-surface">
                 <img
                   src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=1200&auto=format&fit=crop"
-                  alt="ShopNova Artisanal Atelier"
+                  alt="Shipflux Artisanal Atelier"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -46,7 +46,7 @@ export default function HomePage() {
                 Shopping Should Feel Special.
               </h2>
               <p className="text-mutedText leading-relaxed mb-6 text-base">
-                In an era of mass-produced clutter, ShopNova was built on a simple premise: everyday items should delight the senses, withstand the test of time, and be crafted with transparent integrity.
+                In an era of mass-produced clutter, Shipflux was built on a simple premise: everyday items should delight the senses, withstand the test of time, and be crafted with transparent integrity.
               </p>
               <div className="space-y-4 mb-8">
                 <div className="flex items-start gap-3">

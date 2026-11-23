@@ -76,7 +76,7 @@ export const users = [
   {
     id: "user-admin",
     name: "Admin Team",
-    email: "admin@shopnova.com",
+    email: "admin@shipflux.com",
     phone: "+91 80000 00000",
     avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop",
     role: "admin",

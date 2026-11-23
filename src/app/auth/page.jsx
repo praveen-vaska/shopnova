@@ -27,7 +27,7 @@ export default function AuthPage() {
     } else {
       const newUser = {
         id: `user-${Date.now()}`,
-        name: name || 'ShopNova Member',
+        name: name || 'Shipflux Member',
         email,
         phone: '+91 99999 00000',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
@@ -57,7 +57,7 @@ export default function AuthPage() {
               <ShoppingBag className="w-5 h-5" />
             </div>
             <span className="font-heading font-extrabold text-2xl tracking-tight text-primary">
-              ShopNova
+              Shipflux
             </span>
           </Link>
           <h1 className="font-heading font-extrabold text-2xl text-primary mt-1">
@@ -66,7 +66,7 @@ export default function AuthPage() {
           <p className="text-xs text-mutedText mt-1">
             {mode === 'login'
               ? 'Access orders, wishlist and saved delivery addresses.'
-              : 'Join ShopNova for exclusive curated drops and express delivery.'}
+              : 'Join Shipflux for exclusive curated drops and express delivery.'}
           </p>
         </div>
 

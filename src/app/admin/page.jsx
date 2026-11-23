@@ -50,7 +50,7 @@ export default function AdminDashboardPage() {
   } = useShop();
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [adminEmail, setAdminEmail] = useState('admin@shopnova.com');
+  const [adminEmail, setAdminEmail] = useState('admin@shipflux.com');
   const [adminPass, setAdminPass] = useState('••••••••••••');
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -62,7 +62,7 @@ export default function AdminDashboardPage() {
   // Load admin session
   React.useEffect(() => {
     try {
-      const session = localStorage.getItem('shopnova_admin_session');
+      const session = localStorage.getItem('shipflux_admin_session');
       if (session === 'true') {
         setIsAdminLoggedIn(true);
       }
@@ -73,13 +73,13 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     if (!adminEmail) return;
     setIsAdminLoggedIn(true);
-    localStorage.setItem('shopnova_admin_session', 'true');
+    localStorage.setItem('shipflux_admin_session', 'true');
     showToast('Admin Console Authenticated. Welcome!', 'success');
   };
 
   const handleAdminLogout = () => {
     setIsAdminLoggedIn(false);
-    localStorage.removeItem('shopnova_admin_session');
+    localStorage.removeItem('shipflux_admin_session');
     showToast('Admin session locked.', 'info');
   };
 
@@ -236,7 +236,7 @@ export default function AdminDashboardPage() {
               <ShieldCheck className="w-6 h-6 text-white" />
             </div>
             <h1 className="font-heading font-extrabold text-2xl text-white tracking-tight">
-              ShopNova Admin Portal
+              Shipflux Admin Portal
             </h1>
             <p className="text-xs text-[#999999] mt-1.5">
               Secure Operations, Inventory & Fulfillment Console
@@ -256,7 +256,7 @@ export default function AdminDashboardPage() {
                 required
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="admin@shopnova.com"
+                placeholder="admin@shipflux.com"
                 className="w-full px-3.5 py-2.5 rounded-lg border border-[#3A3A3A] bg-[#161616] text-white outline-none focus:border-accent font-medium"
               />
             </div>
@@ -315,7 +315,7 @@ export default function AdminDashboardPage() {
               </div>
               <div>
                 <span className="font-heading font-extrabold text-lg text-white block leading-tight">
-                  ShopNova
+                  Shipflux
                 </span>
                 <span className="text-[10px] text-accent uppercase font-bold tracking-widest">
                   Admin Control
@@ -332,78 +332,7 @@ export default function AdminDashboardPage() {
             {navMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
-              if (!isAdminLoggedIn) {
-    return (
-      <div className="min-h-screen bg-primary flex items-center justify-center p-4 selection:bg-accent selection:text-white">
-        <div className="w-full max-w-md bg-[#202020] border border-[#2E2E2E] rounded-2xl p-8 shadow-2xl text-white">
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center text-primary font-bold mx-auto mb-4 shadow-lg">
-              <ShieldCheck className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="font-heading font-extrabold text-2xl text-white tracking-tight">
-              ShopNova Admin Portal
-            </h1>
-            <p className="text-xs text-[#999999] mt-1.5">
-              Secure Operations, Inventory & Fulfillment Console
-            </p>
-            <span className="inline-block mt-3 px-3 py-1 rounded-full bg-error/15 border border-error/30 text-error text-[10px] font-bold uppercase tracking-wider">
-              Restricted Area • Separate Admin URL
-            </span>
-          </div>
-
-          <form onSubmit={handleAdminLogin} className="space-y-4 text-xs">
-            <div>
-              <label className="text-xs font-semibold text-gray-300 block mb-1.5">
-                Admin Console ID / Email
-              </label>
-              <input
-                type="email"
-                required
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="admin@shopnova.com"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#3A3A3A] bg-[#161616] text-white outline-none focus:border-accent font-medium"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-gray-300 block mb-1.5">
-                Secure Passkey / Credential
-              </label>
-              <input
-                type="password"
-                required
-                value={adminPass}
-                onChange={(e) => setAdminPass(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#3A3A3A] bg-[#161616] text-white outline-none focus:border-accent font-medium tracking-widest"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3.5 mt-2 bg-accent hover:bg-accent-hover text-white font-heading font-bold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all flex items-center justify-center gap-2"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Authenticate & Enter Console</span>
-            </button>
-          </form>
-
-          <div className="mt-8 pt-5 border-t border-[#2E2E2E] text-center">
-            <Link
-              href="/"
-              className="text-xs font-semibold text-gray-400 hover:text-white transition-colors inline-flex items-center gap-1.5"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 text-accent" />
-              <span>Return to Public Storefront</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
+              return (
                 <button
                   key={item.id}
                   onClick={() => {
@@ -474,7 +403,7 @@ export default function AdminDashboardPage() {
                 Welcome back, Admin!
               </h1>
               <p className="text-[11px] text-mutedText hidden sm:block">
-                ShopNova Commercial Operations Portal
+                Shipflux Commercial Operations Portal
               </p>
             </div>
           </div>
@@ -1127,7 +1056,7 @@ export default function AdminDashboardPage() {
         <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl border border-borderSubtle max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto animate-fade-in">
             <div className="flex items-center justify-between pb-4 border-b border-borderSubtle mb-5">
-              <h3 className="font-heading font-bold text-base text-primary">Add New Product to ShopNova</h3>
+              <h3 className="font-heading font-bold text-base text-primary">Add New Product to Shipflux</h3>
               <button onClick={() => setShowAddProductModal(false)} className="text-mutedText hover:text-darkText">
                 <X className="w-5 h-5" />
               </button>

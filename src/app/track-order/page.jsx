@@ -62,7 +62,7 @@ function TrackingContent() {
             Track Your Consignment
           </h1>
           <p className="text-xs text-mutedText mb-6">
-            Enter your ShopNova Order ID (e.g. SN-89241) to monitor real-time shipping milestones.
+            Enter your Shipflux Order ID (e.g. SN-89241) to monitor real-time shipping milestones.
           </p>
 
           <form onSubmit={handleSearch} className="flex gap-2 max-w-md">

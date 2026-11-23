@@ -5,7 +5,7 @@ import ToastContainer from '@/components/ui/ToastContainer';
 import StorefrontShell from '@/components/layout/StorefrontShell';
 
 export const metadata = {
-  title: 'ShopNova – Premium Multi-Category E-Commerce Marketplace',
+  title: 'Shipflux – Premium Multi-Category E-Commerce Marketplace',
   description: 'Explore thoughtfully selected products across fashion, technology, lifestyle, home decor and beauty.',
 };
 

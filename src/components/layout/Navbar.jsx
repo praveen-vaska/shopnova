@@ -58,7 +58,7 @@ export default function Navbar() {
               <ShoppingBag className="w-5 h-5 text-accent" />
             </div>
             <span className="font-heading font-extrabold text-2xl tracking-tight text-primary">
-              ShopNova
+              Shipflux
             </span>
           </Link>
         </div>

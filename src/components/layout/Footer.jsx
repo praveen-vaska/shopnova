@@ -61,11 +61,11 @@ export default function Footer() {
                 <ShoppingBag className="w-5 h-5 text-white" />
               </div>
               <span className="font-heading font-extrabold text-2xl tracking-tight text-white">
-                ShopNova
+                Shipflux
               </span>
             </Link>
             <p className="text-sm text-[#999999] leading-relaxed max-w-sm mb-6">
-              ShopNova is a premium curated marketplace connecting conscious shoppers with exceptional clothing, electronics, home decor and lifestyle essentials.
+              Shipflux is a premium curated marketplace connecting conscious shoppers with exceptional clothing, electronics, home decor and lifestyle essentials.
             </p>
             
             {/* Newsletter input */}
@@ -73,7 +73,7 @@ export default function Footer() {
               <p className="text-xs font-bold uppercase tracking-wider text-accent mb-2">
                 Stay in the Loop
               </p>
-              <form onSubmit={(e) => { e.preventDefault(); alert('Thank you for subscribing to ShopNova edits!'); }} className="flex">
+              <form onSubmit={(e) => { e.preventDefault(); alert('Thank you for subscribing to Shipflux edits!'); }} className="flex">
                 <input
                   type="email"
                   placeholder="Enter your email address"
@@ -137,7 +137,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#777777] gap-4">
-          <p>© 2026 ShopNova Inc. All rights reserved. Designed with precision and elegance.</p>
+          <p>© 2026 Shipflux Inc. All rights reserved. Designed with precision and elegance.</p>
           <div className="flex items-center gap-6">
             <span>Prices in Indian Rupees (₹ INR)</span>
             <span>Made for modern retail</span>

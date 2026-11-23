@@ -1,6 +1,8 @@
-# ShopNova – Premium Multi-Category E-Commerce Marketplace
+# Shipflux – Premium Multi-Category E-Commerce Marketplace
 
-ShopNova is a production-grade, responsive e-commerce web platform engineered with **Next.js 14 (App Router)**, **React 18**, **Tailwind CSS**, and **Lucide Icons**. Designed to reflect commercial retail standards, ShopNova delivers an editorial shopping experience across 8 product categories, complemented by a multi-step checkout workflow and a SaaS-style administrative control center.
+**Live URL**: [https://shipflux.vercel.app/](https://shipflux.vercel.app/)
+
+Shipflux is a production-grade, responsive e-commerce web platform engineered with **Next.js 14 (App Router)**, **React 18**, **Tailwind CSS**, and **Lucide Icons**. Designed to reflect commercial retail standards, Shipflux delivers an editorial shopping experience across 8 product categories, complemented by a multi-step checkout workflow and a SaaS-style administrative control center.
 
 ---
 
@@ -130,7 +132,7 @@ The visual design is strictly crafted according to the reference design system s
 ## 🛠️ Project Structure
 
 ```
-shopnova/
+shipflux/
 ├── package.json               # Next.js, React, Tailwind, Lucide dependencies
 ├── next.config.js             # Image remote patterns for Unsplash
 ├── tailwind.config.js         # Design tokens, palette & fonts
@@ -205,7 +207,7 @@ npm run start
 
 ## 💡 Backend Integration Recommendations
 
-When ready to connect ShopNova to a production backend API:
+When ready to connect Shipflux to a production backend API:
 1. **API Endpoints**: Replace mock data functions in `src/context/ShopContext.jsx` with calls to RESTful or GraphQL endpoints (`/api/products`, `/api/orders`, `/api/cart`, `/api/auth`).
 2. **Authentication**: Integrate NextAuth.js or Firebase Authentication for production OAuth (Google, Apple, Phone OTP).
 3. **Payment Gateways**: Connect Razorpay / Stripe Webhooks in `/checkout` to capture live payments.

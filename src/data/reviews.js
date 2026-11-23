@@ -6,7 +6,7 @@ export const reviews = [
     rating: 5,
     date: "14 Oct 2026",
     productName: "Classic Denim Jacket",
-    comment: "The craftsmanship and tailoring on this jacket exceeded my expectations. Heavyweight cotton, perfect stitch details and timeless wash. ShopNova's delivery was seamless too!",
+    comment: "The craftsmanship and tailoring on this jacket exceeded my expectations. Heavyweight cotton, perfect stitch details and timeless wash. Shipflux's delivery was seamless too!",
     verified: true
   },
   {
