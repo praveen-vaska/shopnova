@@ -21,7 +21,7 @@ function TrackingContent() {
   const searchParams = useSearchParams();
   const initialOrderId = searchParams.get('orderId') || 'SN-89241';
 
-  const { orders, updateOrderStatus } = useShop();
+  const { orders, updateOrderStatus, showToast } = useShop();
   const [orderQuery, setOrderQuery] = useState(initialOrderId);
   const [currentOrder, setCurrentOrder] = useState(
     orders.find((o) => o.orderId === initialOrderId) || orders[0]
@@ -32,8 +32,9 @@ function TrackingContent() {
     const found = orders.find((o) => o.orderId.toLowerCase() === orderQuery.trim().toLowerCase());
     if (found) {
       setCurrentOrder(found);
+      showToast(`Showing milestones for Order ${found.orderId}`, 'success');
     } else {
-      alert(`No order found matching "${orderQuery}". Try SN-89241 or SN-89240.`);
+      showToast(`No order found matching "${orderQuery}". Try SN-89241.`, 'error');
     }
   };
 

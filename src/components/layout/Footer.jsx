@@ -2,10 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useShop } from '@/context/ShopContext';
 import { ShoppingBag, ArrowRight, ShieldCheck, RefreshCw, Truck, Headphones, Mail } from 'lucide-react';
 import { categories } from '@/data/categories';
 
 export default function Footer() {
+  const { showToast } = useShop();
   return (
     <footer className="bg-primary text-white pt-16 pb-10 border-t border-[#262626]">
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -73,7 +75,7 @@ export default function Footer() {
               <p className="text-xs font-bold uppercase tracking-wider text-accent mb-2">
                 Stay in the Loop
               </p>
-              <form onSubmit={(e) => { e.preventDefault(); alert('Thank you for subscribing to Shipflux edits!'); }} className="flex">
+              <form onSubmit={(e) => { e.preventDefault(); showToast('Thank you for subscribing to Shipflux VIP edits!', 'success'); }} className="flex">
                 <input
                   type="email"
                   placeholder="Enter your email address"

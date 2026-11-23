@@ -2,6 +2,7 @@ import './globals.css';
 import { ShopProvider } from '@/context/ShopContext';
 import CustomCursor from '@/components/ui/CustomCursor';
 import ToastContainer from '@/components/ui/ToastContainer';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import StorefrontShell from '@/components/layout/StorefrontShell';
 
 export const metadata = {
@@ -16,6 +17,7 @@ export default function RootLayout({ children }) {
         <ShopProvider>
           <CustomCursor />
           <ToastContainer />
+          <ConfirmModal />
           <StorefrontShell>
             {children}
           </StorefrontShell>

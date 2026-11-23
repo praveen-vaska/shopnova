@@ -47,7 +47,8 @@ export default function AdminDashboardPage() {
     updateOrderStatus,
     addCoupon,
     toggleCouponStatus,
-    showToast
+    showToast,
+    confirmAction
   } = useShop();
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -374,19 +375,28 @@ export default function AdminDashboardPage() {
         {/* Bottom Actions */}
         <div className="p-4 border-t border-[#2A2A2A] space-y-2">
           <button
-            onClick={handleAdminLogout}
+            onClick={() => {
+              confirmAction({
+                title: 'Lock Admin Session',
+                message: 'Are you sure you want to lock the admin console? You will need your credentials to sign back in.',
+                confirmText: 'Lock Session',
+                cancelText: 'Stay in Console',
+                type: 'warning',
+                onConfirm: handleAdminLogout
+              });
+            }}
             className="w-full flex items-center gap-2 text-xs font-heading font-semibold text-error hover:text-red-400 transition-colors py-1"
           >
             <X className="w-4 h-4" />
             <span>Lock Admin Session</span>
           </button>
-          <Link
+          {/* <Link
             href="/"
             className="flex items-center gap-2 text-xs font-heading font-semibold text-[#A0A0A0] hover:text-white transition-colors py-1"
           >
             <ArrowLeft className="w-4 h-4 text-accent" />
             <span>Return to Storefront</span>
-          </Link>
+          </Link> */}
         </div>
       </aside>
 
@@ -731,9 +741,14 @@ export default function AdminDashboardPage() {
                               </button>
                               <button
                                 onClick={() => {
-                                  if (confirm(`Are you sure you want to delete ${p.name}?`)) {
-                                    deleteProduct(p.id);
-                                  }
+                                  confirmAction({
+                                    title: 'Delete Product',
+                                    message: `Are you sure you want to permanently delete "${p.name}"? This item will be removed from your catalog and database.`,
+                                    confirmText: 'Yes, Delete',
+                                    cancelText: 'Keep Product',
+                                    type: 'danger',
+                                    onConfirm: () => deleteProduct(p.id)
+                                  });
                                 }}
                                 className="p-1.5 text-mutedText hover:text-error transition-colors"
                                 title="Delete product"

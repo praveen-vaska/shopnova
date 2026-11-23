@@ -22,6 +22,7 @@ export default function CartPage() {
     removeFromCart,
     updateCartQuantity,
     clearCart,
+    confirmAction,
     cartSubtotal,
     cartDiscount,
     cartShipping,
@@ -163,7 +164,16 @@ export default function CartPage() {
 
                     {/* Delete button */}
                     <button
-                      onClick={() => removeFromCart(item.cartItemId)}
+                      onClick={() => {
+                        confirmAction({
+                          title: 'Remove from Bag',
+                          message: `Are you sure you want to remove "${item.name}" from your shopping bag?`,
+                          confirmText: 'Remove Item',
+                          cancelText: 'Keep in Bag',
+                          type: 'danger',
+                          onConfirm: () => removeFromCart(item.cartItemId)
+                        });
+                      }}
                       className="text-mutedText hover:text-error transition-colors p-2"
                       title="Remove item"
                     >
@@ -182,8 +192,17 @@ export default function CartPage() {
                   <span>← Continue Shopping</span>
                 </Link>
                 <button
-                  onClick={clearCart}
-                  className="text-xs text-mutedText hover:text-error transition-colors"
+                  onClick={() => {
+                    confirmAction({
+                      title: 'Clear Shopping Bag',
+                      message: 'Are you sure you want to remove all items from your shopping bag? This will empty your cart.',
+                      confirmText: 'Clear Entire Bag',
+                      cancelText: 'Keep Items',
+                      type: 'danger',
+                      onConfirm: clearCart
+                    });
+                  }}
+                  className="text-xs text-mutedText hover:text-error transition-colors font-medium"
                 >
                   Clear Bag
                 </button>

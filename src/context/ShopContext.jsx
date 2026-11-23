@@ -25,6 +25,40 @@ export function ShopProvider({ children }) {
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
   const [toasts, setToasts] = useState([]);
 
+  // Luxury Confirmation Dialog State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    type: 'danger', // 'danger' | 'warning' | 'info'
+    onConfirm: null
+  });
+
+  const confirmAction = ({
+    title = 'Are you sure?',
+    message = 'This action cannot be undone.',
+    confirmText = 'Confirm',
+    cancelText = 'Cancel',
+    type = 'danger',
+    onConfirm = () => {}
+  }) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      cancelText,
+      type,
+      onConfirm
+    });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
   // Load from LocalStorage and sync with MongoDB
   useEffect(() => {
     // 1. Initial immediate load from local storage
@@ -458,6 +492,9 @@ export function ShopProvider({ children }) {
         setAuthMode,
         showToast,
         removeToast,
+        confirmModal,
+        confirmAction,
+        closeConfirmModal,
         addToCart,
         removeFromCart,
         updateCartQuantity,
