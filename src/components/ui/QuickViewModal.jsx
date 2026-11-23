@@ -7,9 +7,11 @@ import { useShop } from '@/context/ShopContext';
 import { formatCurrency } from '@/utils/format';
 
 export default function QuickViewModal({ product, onClose }) {
-  const { addToCart, toggleWishlist, isInWishlist } = useShop();
+  const { addToCart, toggleWishlist, isInWishlist, showToast } = useShop();
+  const hasSizes = Boolean(product?.sizes && product.sizes.length > 0 && product.sizes[0] !== "One Size");
   const [selectedColor, setSelectedColor] = useState(product?.colors?.[0]?.name || "Standard");
-  const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0] || "Standard");
+  const [selectedSize, setSelectedSize] = useState(hasSizes ? '' : 'Standard');
+  const [sizeError, setSizeError] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -17,8 +19,15 @@ export default function QuickViewModal({ product, onClose }) {
   const isWishlisted = isInWishlist(product.id);
 
   const handleAdd = () => {
-    addToCart(product, quantity, selectedColor, selectedSize);
-    onClose();
+    if (hasSizes && !selectedSize) {
+      setSizeError(true);
+      showToast("Please choose a size before adding to cart.", "error");
+      return;
+    }
+    const success = addToCart(product, quantity, selectedColor, selectedSize || "Standard");
+    if (success !== false) {
+      onClose();
+    }
   };
 
   return (
@@ -120,19 +129,24 @@ export default function QuickViewModal({ product, onClose }) {
               )}
 
               {/* Size Buttons */}
-              {product.sizes && product.sizes.length > 0 && product.sizes[0] !== "One Size" && (
+              {hasSizes && (
                 <div className="mb-5">
-                  <span className="text-xs font-semibold text-darkText block mb-2">
-                    Select Size:
+                  <span className={`text-xs font-semibold block mb-2 ${sizeError ? 'text-error font-bold' : 'text-darkText'}`}>
+                    Select Size * {sizeError && '(Required)'}
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {product.sizes.map((s) => (
                       <button
                         key={s}
-                        onClick={() => setSelectedSize(s)}
+                        onClick={() => {
+                          setSelectedSize(s);
+                          setSizeError(false);
+                        }}
                         className={`px-3 py-1.5 rounded-sm border text-xs font-bold transition-all ${
                           selectedSize === s
                             ? 'bg-primary text-white border-primary'
+                            : sizeError
+                            ? 'bg-white text-darkText border-error/70 hover:border-error'
                             : 'bg-white text-darkText border-borderSubtle hover:border-darkText'
                         }`}
                       >

@@ -154,18 +154,30 @@ export function ShopProvider({ children }) {
     const size = selectedSize || (product.sizes && product.sizes[0]) || "Standard";
     const cartItemId = `${product.id}-${color}-${size}`;
 
+    const maxStock = typeof product.stock === 'number' ? product.stock : 99;
+    if (maxStock <= 0) {
+      showToast(`Sorry, "${product.name}" is currently out of stock.`, 'error');
+      return false;
+    }
+
     const existingIndex = cart.findIndex((item) => item.cartItemId === cartItemId);
     let newCart;
     if (existingIndex > -1) {
+      const currentQty = cart[existingIndex].quantity;
+      if (currentQty + quantity > maxStock) {
+        showToast(`Cannot add more than available stock (${maxStock} units).`, 'warning');
+        return false;
+      }
       newCart = [...cart];
       newCart[existingIndex].quantity += quantity;
     } else {
+      const addQty = Math.min(quantity, maxStock);
       newCart = [
         ...cart,
         {
           cartItemId,
           product,
-          quantity,
+          quantity: addQty,
           selectedColor: color,
           selectedSize: size
         }
@@ -174,6 +186,7 @@ export function ShopProvider({ children }) {
 
     updateCart(newCart);
     showToast(`Added "${product.name}" to your bag!`, 'success');
+    return true;
   };
 
   const removeFromCart = (cartItemId) => {
@@ -188,6 +201,12 @@ export function ShopProvider({ children }) {
   const updateCartQuantity = (cartItemId, newQty) => {
     if (newQty <= 0) {
       removeFromCart(cartItemId);
+      return;
+    }
+    const item = cart.find((i) => i.cartItemId === cartItemId);
+    const maxStock = typeof item?.product?.stock === 'number' ? item.product.stock : 99;
+    if (newQty > maxStock) {
+      showToast(`Maximum available stock reached (${maxStock} units).`, 'warning');
       return;
     }
     const newCart = cart.map((item) =>

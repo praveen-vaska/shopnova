@@ -39,19 +39,25 @@ export default function ProductCard({ product, onQuickView }) {
         <Link href={`/product/${product.id}`} className="block w-full h-full">
           {/* Main Product Image */}
           <img
-            src={product.images[0]}
+            src={product.image || product.images?.[0] || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800'}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800';
+            }}
           />
 
           {/* Alternate Image on hover if available */}
-          {product.images[1] && (
+          {product.images?.[1] && (
             <img
               src={product.images[1]}
               alt={`${product.name} alternate view`}
               className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out"
               loading="lazy"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
             />
           )}
         </Link>

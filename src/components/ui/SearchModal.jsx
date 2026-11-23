@@ -113,9 +113,12 @@ export default function SearchModal() {
                   className="py-3 flex items-center gap-4 hover:bg-surface/60 px-2 rounded-sm transition-colors group"
                 >
                   <img
-                    src={product.images[0]}
+                    src={product.image || product.images?.[0] || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800'}
                     alt={product.name}
                     className="w-14 h-16 object-cover rounded bg-surface"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800';
+                    }}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] uppercase font-bold text-mutedText tracking-wider">

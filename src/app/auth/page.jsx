@@ -13,37 +13,75 @@ export default function AuthPage() {
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('aarav.sharma@example.com');
-  const [password, setPassword] = useState('••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [authError, setAuthError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setAuthError('');
+
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password) {
+      setAuthError('Please provide both email and password.');
+      return;
+    }
+
     if (mode === 'login') {
-      const found = users.find(u => u.email.toLowerCase() === email.toLowerCase()) || users[0];
+      // Look up in hardcoded users list or local registered users
+      let registered = [];
+      try {
+        const stored = localStorage.getItem('shipflux_registered_users');
+        if (stored) registered = JSON.parse(stored);
+      } catch (err) {}
+
+      const allUsers = [...users, ...registered];
+      const found = allUsers.find((u) => u.email.toLowerCase() === cleanEmail);
+
+      // Validate credentials
+      if (!found || (found.password && found.password !== password) || password.length < 4) {
+        setAuthError('Invalid credentials. Please verify your email and password.');
+        showToast('Invalid email or password.', 'error');
+        return;
+      }
+
       updateUser(found);
       showToast(`Welcome back, ${found.name}!`, 'success');
       router.push('/account');
     } else {
+      if (password.length < 6) {
+        setAuthError('Password must be at least 6 characters.');
+        return;
+      }
+
       const newUser = {
         id: `user-${Date.now()}`,
-        name: name || 'Shipflux Member',
-        email,
-        phone: '+91 99999 00000',
+        name: name.trim() || 'Shipflux Member',
+        email: cleanEmail,
+        password,
+        phone: '+91 98765 00000',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
         role: 'customer',
         joinedDate: 'Nov 2026',
         addresses: []
       };
+
+      try {
+        const stored = localStorage.getItem('shipflux_registered_users');
+        const list = stored ? JSON.parse(stored) : [];
+        localStorage.setItem('shipflux_registered_users', JSON.stringify([...list, newUser]));
+      } catch (err) {}
+
       updateUser(newUser);
-      showToast("Account created successfully!", "success");
+      showToast('Account created successfully! Welcome to Shipflux.', 'success');
       router.push('/account');
     }
   };
 
   const handleQuickDemoLogin = () => {
     updateUser(users[0]);
-    showToast("Logged in as Aarav Sharma (Customer)", "success");
+    showToast('Logged in as Aarav Sharma (Customer)', 'success');
     router.push('/account');
   };
 
@@ -73,7 +111,7 @@ export default function AuthPage() {
         {/* Tab Toggle */}
         <div className="grid grid-cols-2 p-1 bg-surface rounded-lg mb-6 text-xs font-heading font-bold">
           <button
-            onClick={() => setMode('login')}
+            onClick={() => { setMode('login'); setAuthError(''); }}
             className={`py-2 rounded-md transition-all ${
               mode === 'login' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
             }`}
@@ -81,7 +119,7 @@ export default function AuthPage() {
             Sign In
           </button>
           <button
-            onClick={() => setMode('register')}
+            onClick={() => { setMode('register'); setAuthError(''); }}
             className={`py-2 rounded-md transition-all ${
               mode === 'register' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
             }`}
@@ -89,6 +127,12 @@ export default function AuthPage() {
             Register
           </button>
         </div>
+
+        {authError && (
+          <div className="mb-5 p-3 rounded-md bg-red-50 border border-red-200 text-error text-xs font-medium animate-fade-in">
+            {authError}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">

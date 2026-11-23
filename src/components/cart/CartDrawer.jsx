@@ -95,9 +95,12 @@ export default function CartDrawer() {
                 <div key={item.cartItemId} className="py-4 flex gap-4">
                   {/* Thumbnail */}
                   <img
-                    src={item.product.images[0]}
+                    src={item.product.image || item.product.images?.[0] || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800'}
                     alt={item.product.name}
                     className="w-20 h-24 object-cover rounded-sm bg-surface flex-shrink-0"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800';
+                    }}
                   />
 
                   {/* Details */}
@@ -142,7 +145,9 @@ export default function CartDrawer() {
                         </span>
                         <button
                           onClick={() => updateCartQuantity(item.cartItemId, item.quantity + 1)}
-                          className="w-7 h-7 flex items-center justify-center text-darkText hover:bg-surface font-bold text-sm"
+                          disabled={item.quantity >= (item.product.stock || 99)}
+                          className="w-7 h-7 flex items-center justify-center text-darkText hover:bg-surface font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                          title={item.quantity >= (item.product.stock || 99) ? "Max stock reached" : "Increase quantity"}
                         >
                           +
                         </button>

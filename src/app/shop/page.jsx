@@ -40,6 +40,8 @@ function ShopContent() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [viewCols, setViewCols] = useState(4); // 3 or 4
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   // Extract distinct brands
   const brands = useMemo(() => {
@@ -63,7 +65,13 @@ function ShopContent() {
     setSelectedDiscount('all');
     setSearchQuery('');
     setSortBy('featured');
+    setCurrentPage(1);
   };
+
+  // Reset page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedBrands, priceRange, selectedRating, onlyInStock, selectedDiscount, searchQuery, sortBy]);
 
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
@@ -417,21 +425,81 @@ function ShopContent() {
                 </button>
               </div>
             ) : (
-              <div
-                className={`grid grid-cols-2 ${
-                  viewCols === 3
-                    ? 'sm:grid-cols-2 md:grid-cols-3'
-                    : 'sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'
-                } gap-4 sm:gap-6`}
-              >
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onQuickView={(p) => setQuickViewProduct(p)}
-                  />
-                ))}
-              </div>
+              <>
+                <div
+                  className={`grid grid-cols-2 ${
+                    viewCols === 3
+                      ? 'sm:grid-cols-2 md:grid-cols-3'
+                      : 'sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'
+                  } gap-4 sm:gap-6`}
+                >
+                  {filteredProducts
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        onQuickView={(p) => setQuickViewProduct(p)}
+                      />
+                    ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {Math.ceil(filteredProducts.length / itemsPerPage) > 1 && (
+                  <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-borderSubtle">
+                    <p className="text-xs text-mutedText">
+                      Showing <span className="font-bold text-darkText">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                      <span className="font-bold text-darkText">
+                        {Math.min(currentPage * itemsPerPage, filteredProducts.length)}
+                      </span>{' '}
+                      of <span className="font-bold text-darkText">{filteredProducts.length}</span> products
+                    </p>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setCurrentPage((p) => Math.max(1, p - 1));
+                          window.scrollTo({ top: 120, behavior: 'smooth' });
+                        }}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1.5 rounded border border-borderSubtle text-xs font-semibold text-darkText hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Previous
+                      </button>
+
+                      {Array.from({ length: Math.ceil(filteredProducts.length / itemsPerPage) }, (_, i) => i + 1).map(
+                        (page) => (
+                          <button
+                            key={page}
+                            onClick={() => {
+                              setCurrentPage(page);
+                              window.scrollTo({ top: 120, behavior: 'smooth' });
+                            }}
+                            className={`w-8 h-8 rounded text-xs font-bold transition-all ${
+                              currentPage === page
+                                ? 'bg-primary text-white shadow-sm'
+                                : 'border border-borderSubtle text-darkText hover:bg-surface'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        )
+                      )}
+
+                      <button
+                        onClick={() => {
+                          setCurrentPage((p) => Math.min(Math.ceil(filteredProducts.length / itemsPerPage), p + 1));
+                          window.scrollTo({ top: 120, behavior: 'smooth' });
+                        }}
+                        disabled={currentPage === Math.ceil(filteredProducts.length / itemsPerPage)}
+                        className="px-3 py-1.5 rounded border border-borderSubtle text-xs font-semibold text-darkText hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </main>
         </div>

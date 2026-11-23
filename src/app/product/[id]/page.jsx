@@ -27,11 +27,13 @@ export default function ProductDetailsPage() {
   const { products, addToCart, toggleWishlist, isInWishlist, showToast, setIsCartDrawerOpen } = useShop();
 
   const product = products.find((p) => p.id === id) || products[0];
+  const hasSizes = Boolean(product?.sizes && product.sizes.length > 0 && product.sizes[0] !== "One Size");
 
   // Options State
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState(product?.colors?.[0]?.name || "Standard");
-  const [selectedSize, setSelectedSize] = useState(product?.sizes?.[0] || "Standard");
+  const [selectedSize, setSelectedSize] = useState(hasSizes ? '' : 'Standard');
+  const [sizeError, setSizeError] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('highlights'); // 'highlights' | 'specs' | 'reviews' | 'shipping'
 
@@ -83,13 +85,27 @@ export default function ProductDetailsPage() {
   };
 
   const handleAddToCart = () => {
-    addToCart(product, quantity, selectedColor, selectedSize);
-    setIsCartDrawerOpen(true);
+    if (hasSizes && !selectedSize) {
+      setSizeError(true);
+      showToast("Please select a size before adding to bag.", "error");
+      return;
+    }
+    const success = addToCart(product, quantity, selectedColor, selectedSize || "Standard");
+    if (success !== false) {
+      setIsCartDrawerOpen(true);
+    }
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity, selectedColor, selectedSize);
-    router.push('/checkout');
+    if (hasSizes && !selectedSize) {
+      setSizeError(true);
+      showToast("Please select a size before proceeding to checkout.", "error");
+      return;
+    }
+    const success = addToCart(product, quantity, selectedColor, selectedSize || "Standard");
+    if (success !== false) {
+      router.push('/checkout');
+    }
   };
 
   const handleAddReview = (e) => {
@@ -253,20 +269,27 @@ export default function ProductDetailsPage() {
               )}
 
               {/* Size Selector */}
-              {product.sizes && product.sizes.length > 0 && product.sizes[0] !== "One Size" && (
+              {hasSizes && (
                 <div className="mb-6">
                   <div className="flex justify-between items-center text-xs font-semibold text-darkText mb-2.5">
-                    <span>Select Size</span>
+                    <span className={sizeError ? "text-error font-bold" : ""}>
+                      Select Size * {sizeError && "(Required)"}
+                    </span>
                     <button className="text-accent underline font-normal text-xs">Size Guide</button>
                   </div>
                   <div className="flex flex-wrap gap-2.5">
                     {product.sizes.map((s) => (
                       <button
                         key={s}
-                        onClick={() => setSelectedSize(s)}
+                        onClick={() => {
+                          setSelectedSize(s);
+                          setSizeError(false);
+                        }}
                         className={`min-w-[44px] h-10 px-3 rounded-sm border text-xs font-heading font-bold transition-all flex items-center justify-center ${
                           selectedSize === s
                             ? 'bg-primary text-white border-primary shadow-sm'
+                            : sizeError
+                            ? 'bg-white text-darkText border-error/70 hover:border-error'
                             : 'bg-white text-darkText border-borderSubtle hover:border-primary'
                         }`}
                       >
@@ -274,16 +297,27 @@ export default function ProductDetailsPage() {
                       </button>
                     ))}
                   </div>
+                  {sizeError && (
+                    <p className="text-[11px] text-error mt-1.5 font-semibold">
+                      Please choose a size to proceed.
+                    </p>
+                  )}
                 </div>
               )}
 
               {/* Quantity Selector */}
               <div className="mb-8">
-                <span className="text-xs font-semibold text-darkText block mb-2.5">Quantity</span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-darkText">Quantity</span>
+                  <span className="text-xs text-mutedText">
+                    {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                  </span>
+                </div>
                 <div className="flex items-center border border-borderSubtle rounded-sm bg-white w-32">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-10 flex items-center justify-center text-darkText hover:bg-surface font-bold text-base"
+                    disabled={quantity <= 1}
+                    className="w-10 h-10 flex items-center justify-center text-darkText hover:bg-surface font-bold text-base disabled:opacity-40"
                   >
                     -
                   </button>
@@ -291,8 +325,9 @@ export default function ProductDetailsPage() {
                     {quantity}
                   </span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-10 h-10 flex items-center justify-center text-darkText hover:bg-surface font-bold text-base"
+                    onClick={() => setQuantity((q) => Math.min(product.stock || 99, q + 1))}
+                    disabled={quantity >= (product.stock || 1)}
+                    className="w-10 h-10 flex items-center justify-center text-darkText hover:bg-surface font-bold text-base disabled:opacity-40"
                   >
                     +
                   </button>

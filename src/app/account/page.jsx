@@ -83,7 +83,15 @@ export default function AccountPage() {
     );
   }
 
-  const userOrders = orders; // Demo displays all customer orders
+  const userOrders = React.useMemo(() => {
+    if (!user) return [];
+    return orders.filter(
+      (o) =>
+        !o.customer?.email ||
+        o.customer?.email?.toLowerCase() === user.email?.toLowerCase() ||
+        o.customer?.name?.toLowerCase() === user.name?.toLowerCase()
+    );
+  }, [orders, user]);
 
   return (
     <div className="bg-secondary/40 min-h-screen py-10 px-4">

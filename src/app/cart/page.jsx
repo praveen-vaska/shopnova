@@ -111,9 +111,12 @@ export default function CartPage() {
                   <div key={item.cartItemId} className="p-4 sm:p-6 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
                     {/* Thumbnail */}
                     <img
-                      src={item.product.images[0]}
+                      src={item.product.image || item.product.images?.[0] || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800'}
                       alt={item.product.name}
                       className="w-20 h-24 sm:w-24 sm:h-28 object-cover rounded-sm bg-surface flex-shrink-0"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800';
+                      }}
                     />
 
                     {/* Info */}
@@ -146,7 +149,9 @@ export default function CartPage() {
                       </span>
                       <button
                         onClick={() => updateCartQuantity(item.cartItemId, item.quantity + 1)}
-                        className="w-8 h-8 flex items-center justify-center text-darkText hover:bg-surface font-bold text-sm"
+                        disabled={item.quantity >= (item.product.stock || 99)}
+                        className="w-8 h-8 flex items-center justify-center text-darkText hover:bg-surface font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                        title={item.quantity >= (item.product.stock || 99) ? "Max stock reached" : "Increase quantity"}
                       >
                         +
                       </button>

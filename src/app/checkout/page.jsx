@@ -24,28 +24,29 @@ export default function CheckoutPage() {
 
   const [step, setStep] = useState(1); // 1: Address, 2: Delivery, 3: Payment, 4: Review
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   // Form State
   const [formData, setFormData] = useState({
-    name: user?.name || 'Aarav Sharma',
-    phone: user?.phone || '+91 98765 43210',
-    email: user?.email || 'aarav.sharma@example.com',
-    addressLine1: 'B-204, Green Valley Apartments',
-    addressLine2: 'Outer Ring Road, Bellandur',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    postalCode: '560103',
+    name: user?.name || '',
+    phone: user?.phone || '',
+    email: user?.email || '',
+    addressLine1: user?.addresses?.[0]?.addressLine1 || '',
+    addressLine2: user?.addresses?.[0]?.addressLine2 || '',
+    city: user?.addresses?.[0]?.city || '',
+    state: user?.addresses?.[0]?.state || '',
+    postalCode: user?.addresses?.[0]?.postalCode || '',
     addressType: 'Home'
   });
 
   const [deliveryMethod, setDeliveryMethod] = useState('standard'); // 'standard' | 'express'
   const [paymentMethod, setPaymentMethod] = useState('UPI'); // 'UPI' | 'Card' | 'COD'
-  const [upiId, setUpiId] = useState('aarav@okhdfcbank');
+  const [upiId, setUpiId] = useState(user?.email ? `${user.email.split('@')[0]}@okhdfcbank` : '');
   const [cardData, setCardData] = useState({
-    number: '•••• •••• •••• 4242',
-    name: 'Aarav Sharma',
-    expiry: '08/29',
-    cvv: '•••'
+    number: '',
+    name: user?.name || '',
+    expiry: '',
+    cvv: ''
   });
 
   if (cart.length === 0) {
@@ -63,8 +64,23 @@ export default function CheckoutPage() {
   const handleNextStep = (e) => {
     e.preventDefault();
     if (step === 1) {
-      if (!formData.name || !formData.phone || !formData.addressLine1 || !formData.city || !formData.postalCode) {
+      if (!formData.name.trim() || !formData.phone.trim() || !formData.addressLine1.trim() || !formData.city.trim() || !formData.postalCode.trim()) {
         showToast('Please fill in all mandatory delivery fields.', 'error');
+        return;
+      }
+      const cleanPhone = formData.phone.replace(/[^0-9]/g, '');
+      if (cleanPhone.length < 10) {
+        showToast('Please enter a valid 10-digit mobile number.', 'error');
+        return;
+      }
+      const cleanPin = formData.postalCode.replace(/[^0-9]/g, '');
+      if (cleanPin.length !== 6) {
+        showToast('Please enter a valid 6-digit Indian PIN Code.', 'error');
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!formData.email || !emailRegex.test(formData.email)) {
+        showToast('Please enter a valid email address for order notifications.', 'error');
         return;
       }
     }
@@ -73,15 +89,40 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = () => {
+    if (isSubmitting) return; // Prevent duplicate payment trigger
+    setPaymentError('');
     setIsSubmitting(true);
+
+    // Payment simulation with failure handling support
     setTimeout(() => {
-      const order = placeOrder({
-        shippingAddress: formData,
-        deliveryMethod,
-        paymentMethod
-      });
-      setIsSubmitting(false);
-      router.push(`/order-success/${order.orderId}`);
+      // If user tests simulated failure
+      if (paymentMethod === 'UPI' && (upiId.toLowerCase().includes('fail') || upiId.toLowerCase().includes('decline'))) {
+        setIsSubmitting(false);
+        setPaymentError('Payment Failed: UPI transaction was declined by issuing bank. Please retry or choose another payment method.');
+        showToast('Payment Failed. Transaction declined.', 'error');
+        return;
+      }
+
+      if (paymentMethod === 'Card' && cardData.number.endsWith('0000')) {
+        setIsSubmitting(false);
+        setPaymentError('Payment Failed: Card declined due to authorization failure. Please retry.');
+        showToast('Card authorization failed.', 'error');
+        return;
+      }
+
+      try {
+        const order = placeOrder({
+          shippingAddress: formData,
+          deliveryMethod,
+          paymentMethod
+        });
+        setIsSubmitting(false);
+        router.push(`/order-success/${order.orderId}`);
+      } catch (err) {
+        setIsSubmitting(false);
+        setPaymentError('An unexpected error occurred during order generation. Please try again.');
+        showToast('Order processing failed.', 'error');
+      }
     }, 1200);
   };
 
@@ -470,11 +511,22 @@ export default function CheckoutPage() {
                   ))}
                 </div>
 
+                {/* Payment Error Alert */}
+                {paymentError && (
+                  <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-error text-xs font-medium animate-fade-in flex items-start gap-2.5">
+                    <ShieldCheck className="w-4 h-4 text-error shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-bold mb-0.5">Payment Could Not Be Completed</p>
+                      <p>{paymentError}</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Place Order CTA */}
                 <button
                   onClick={handlePlaceOrder}
                   disabled={isSubmitting}
-                  className="w-full py-4 bg-accent hover:bg-accent-hover text-white font-heading font-bold text-sm rounded shadow-lg transition-all flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-accent hover:bg-accent-hover active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white font-heading font-bold text-sm rounded shadow-lg transition-all flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <span>Securing payment & generating order...</span>
