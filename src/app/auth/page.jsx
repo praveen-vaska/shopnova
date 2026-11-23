@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
-import { ShoppingBag, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Eye, EyeOff, ArrowRight, ShieldCheck, Loader2, AlertTriangle } from 'lucide-react';
 import { users } from '@/data/users';
 
 export default function AuthPage() {
@@ -16,72 +16,48 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [authError, setAuthError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
+    setIsLoading(true);
 
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail || !password) {
-      setAuthError('Please provide both email and password.');
-      return;
-    }
+    const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+    const payload = mode === 'login'
+      ? { email: email.trim(), password }
+      : { name: name.trim(), email: email.trim(), password, phone: phone.trim() };
 
-    if (mode === 'login') {
-      // Look up in hardcoded users list or local registered users
-      let registered = [];
-      try {
-        const stored = localStorage.getItem('shipflux_registered_users');
-        if (stored) registered = JSON.parse(stored);
-      } catch (err) {}
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
 
-      const allUsers = [...users, ...registered];
-      const found = allUsers.find((u) => u.email.toLowerCase() === cleanEmail);
-
-      // Validate credentials
-      if (!found || (found.password && found.password !== password) || password.length < 4) {
-        setAuthError('Invalid credentials. Please verify your email and password.');
-        showToast('Invalid email or password.', 'error');
-        return;
+      if (res.ok && data.success && data.user) {
+        updateUser(data.user);
+        if (data.token) {
+          localStorage.setItem('shipflux_user_token', data.token);
+        }
+        showToast(data.message || 'Signed in successfully!', 'success');
+        router.push('/account');
+      } else {
+        setAuthError(data.message || 'Authentication failed. Please verify your credentials.');
       }
-
-      updateUser(found);
-      showToast(`Welcome back, ${found.name}!`, 'success');
-      router.push('/account');
-    } else {
-      if (password.length < 6) {
-        setAuthError('Password must be at least 6 characters.');
-        return;
-      }
-
-      const newUser = {
-        id: `user-${Date.now()}`,
-        name: name.trim() || 'Shipflux Member',
-        email: cleanEmail,
-        password,
-        phone: '+91 98765 00000',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
-        role: 'customer',
-        joinedDate: 'Nov 2026',
-        addresses: []
-      };
-
-      try {
-        const stored = localStorage.getItem('shipflux_registered_users');
-        const list = stored ? JSON.parse(stored) : [];
-        localStorage.setItem('shipflux_registered_users', JSON.stringify([...list, newUser]));
-      } catch (err) {}
-
-      updateUser(newUser);
-      showToast('Account created successfully! Welcome to Shipflux.', 'success');
-      router.push('/account');
+    } catch (err) {
+      setAuthError('Failed to communicate with authentication service. Please check your connection.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleQuickDemoLogin = () => {
-    updateUser(users[0]);
-    showToast('Logged in as Aarav Sharma (Customer)', 'success');
+  const handleQuickDemoLogin = (demoAccount) => {
+    updateUser(demoAccount || users[0]);
+    showToast(`Logged in as ${(demoAccount || users[0]).name}`, 'success');
     router.push('/account');
   };
 
@@ -137,21 +113,33 @@ export default function AuthPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
-            <div>
-              <label className="text-xs font-semibold text-darkText block mb-1">Full Name</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Aarav Sharma"
-                className="w-full px-3.5 py-2.5 text-xs rounded border border-borderSubtle outline-none focus:border-accent"
-              />
-            </div>
+            <>
+              <div>
+                <label className="text-xs font-semibold text-darkText block mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Aarav Sharma"
+                  className="w-full px-3.5 py-2.5 text-xs rounded border border-borderSubtle outline-none focus:border-accent"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-darkText block mb-1">Mobile Number</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="w-full px-3.5 py-2.5 text-xs rounded border border-borderSubtle outline-none focus:border-accent"
+                />
+              </div>
+            </>
           )}
 
           <div>
-            <label className="text-xs font-semibold text-darkText block mb-1">Email Address</label>
+            <label className="text-xs font-semibold text-darkText block mb-1">Email Address *</label>
             <input
               type="email"
               required
@@ -164,7 +152,7 @@ export default function AuthPage() {
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-semibold text-darkText">Password</label>
+              <label className="text-xs font-semibold text-darkText">Password *</label>
               {mode === 'login' && (
                 <button
                   type="button"
@@ -181,6 +169,7 @@ export default function AuthPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
                 className="w-full px-3.5 py-2.5 text-xs rounded border border-borderSubtle outline-none focus:border-accent pr-10"
               />
               <button
@@ -195,24 +184,45 @@ export default function AuthPage() {
 
           <button
             type="submit"
-            className="w-full py-3.5 bg-primary hover:bg-primary-hover text-white text-xs font-heading font-bold rounded shadow-sm transition-all"
+            disabled={isLoading}
+            className="w-full py-3.5 bg-primary hover:bg-primary-hover active:scale-[0.99] text-white text-xs font-heading font-bold rounded shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            {mode === 'login' ? 'Sign In' : 'Create Account'}
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                <span>Processing...</span>
+              </>
+            ) : (
+              <span>{mode === 'login' ? 'Sign In to Account' : 'Create Account'}</span>
+            )}
           </button>
         </form>
 
         {/* 1-Click Fast Demo Login for Customer */}
         <div className="mt-8 pt-6 border-t border-borderSubtle space-y-2">
           <span className="text-[11px] font-bold uppercase tracking-wider text-mutedText block text-center mb-2">
-            One-Click Demo Customer Access
+            One-Click Customer Demo Testing
           </span>
-          <button
-            onClick={handleQuickDemoLogin}
-            className="w-full py-2.5 px-3.5 bg-surface hover:bg-secondary border border-borderSubtle rounded text-xs font-semibold text-darkText flex items-center justify-between transition-colors"
-          >
-            <span>Demo Customer (Aarav Sharma)</span>
-            <ArrowRight className="w-3.5 h-3.5 text-accent" />
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleQuickDemoLogin(users[0])}
+              className="p-2.5 rounded-lg border border-borderSubtle hover:border-accent bg-surface hover:bg-white text-left transition-all group"
+            >
+              <p className="font-heading font-bold text-[11px] text-darkText group-hover:text-accent">
+                Aarav Sharma
+              </p>
+              <p className="text-[10px] text-mutedText truncate">aarav.sharma@example.com</p>
+            </button>
+            <button
+              onClick={() => handleQuickDemoLogin(users[1])}
+              className="p-2.5 rounded-lg border border-borderSubtle hover:border-accent bg-surface hover:bg-white text-left transition-all group"
+            >
+              <p className="font-heading font-bold text-[11px] text-darkText group-hover:text-accent">
+                Pooja Hegde
+              </p>
+              <p className="text-[10px] text-mutedText truncate">pooja.h@example.com</p>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
+import { users as initialDemoUsers } from '@/data/users';
 import { 
   User, 
   Package, 
@@ -15,7 +16,16 @@ import {
   Check, 
   Edit3, 
   Plus,
-  Truck
+  Truck,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  Phone,
+  AlertTriangle,
+  Loader2,
+  ShoppingBag,
+  ArrowRight
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/utils/format';
 
@@ -27,10 +37,31 @@ export default function AccountPage() {
 
   // Editable Profile
   const [profileForm, setProfileForm] = useState({
-    name: user?.name || 'Aarav Sharma',
-    email: user?.email || 'aarav.sharma@example.com',
-    phone: user?.phone || '+91 98765 43210'
+    name: '',
+    email: '',
+    phone: ''
   });
+
+  // Sync profile form when user changes
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || ''
+      });
+    }
+  }, [user]);
+
+  // Auth Form State (when user is not logged in)
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authName, setAuthName] = useState('');
+  const [authPhone, setAuthPhone] = useState('');
+  const [showAuthPassword, setShowAuthPassword] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   // New Address form
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -42,6 +73,16 @@ export default function AccountPage() {
     postalCode: '',
     type: 'Home'
   });
+
+  // User orders calculation (HOOK IS AT TOP LEVEL, BEFORE ANY CONDITIONAL RETURNS)
+  const userOrders = useMemo(() => {
+    if (!user) return [];
+    return orders.filter(
+      (o) =>
+        o.customer?.email?.toLowerCase() === user.email?.toLowerCase() ||
+        o.customer?.name?.toLowerCase() === user.name?.toLowerCase()
+    );
+  }, [orders, user]);
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
@@ -67,31 +108,234 @@ export default function AccountPage() {
 
   const handleLogout = () => {
     updateUser(null);
+    localStorage.removeItem('shipflux_user_token');
     showToast("Logged out successfully.", "info");
-    router.push('/auth');
   };
 
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    setIsAuthLoading(true);
+
+    const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+    const payload = authMode === 'login'
+      ? { email: authEmail.trim(), password: authPassword }
+      : { 
+          name: authName.trim(), 
+          email: authEmail.trim(), 
+          password: authPassword, 
+          phone: authPhone.trim() 
+        };
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.user) {
+        updateUser(data.user);
+        if (data.token) {
+          localStorage.setItem('shipflux_user_token', data.token);
+        }
+        showToast(data.message || 'Authenticated successfully!', 'success');
+      } else {
+        setAuthError(data.message || 'Authentication failed. Please verify your credentials.');
+      }
+    } catch (err) {
+      setAuthError('Failed to communicate with authentication service. Please check your connection.');
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleQuickDemo = (demoAccount) => {
+    updateUser(demoAccount);
+    showToast(`Signed in as ${demoAccount.name}`, 'success');
+  };
+
+  // IF NOT LOGGED IN: Render modern user login / signup card
   if (!user) {
     return (
-      <div className="py-24 text-center max-w-md mx-auto px-4">
-        <h2 className="font-heading font-bold text-2xl text-primary mb-2">Sign in to your account</h2>
-        <p className="text-xs text-mutedText mb-6">Manage orders, addresses, and wishlist effortlessly.</p>
-        <Link href="/auth" className="btn-primary px-7 py-3 rounded text-xs font-bold">
-          Sign In / Register
-        </Link>
+      <div className="bg-secondary/40 min-h-screen py-12 sm:py-16 px-4 flex items-center justify-center">
+        <div className="w-full max-w-md bg-white rounded-2xl border border-borderSubtle shadow-xl p-6 sm:p-8 animate-fade-in">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <Link href="/" className="inline-flex items-center gap-2 mb-3 group">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm group-hover:bg-primary-hover transition-colors">
+                <ShoppingBag className="w-5 h-5 text-accent" />
+              </div>
+              <span className="font-heading font-extrabold text-2xl tracking-tight text-primary">
+                Shipflux
+              </span>
+            </Link>
+            <h1 className="font-heading font-extrabold text-2xl text-primary">
+              {authMode === 'login' ? 'Customer Sign In' : 'Create Customer Account'}
+            </h1>
+            <p className="text-xs text-mutedText mt-1.5">
+              {authMode === 'login'
+                ? 'Sign in to access your orders, track shipments and manage addresses.'
+                : 'Register to unlock customized recommendations, saved addresses & express checkout.'}
+            </p>
+          </div>
+
+          {/* Mode Switcher */}
+          <div className="grid grid-cols-2 p-1 bg-surface rounded-lg mb-6 text-xs font-heading font-bold">
+            <button
+              type="button"
+              onClick={() => { setAuthMode('login'); setAuthError(''); }}
+              className={`py-2 rounded-md transition-all ${
+                authMode === 'login' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => { setAuthMode('register'); setAuthError(''); }}
+              className={`py-2 rounded-md transition-all ${
+                authMode === 'register' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
+              }`}
+            >
+              Register
+            </button>
+          </div>
+
+          {/* Error Banner */}
+          {authError && (
+            <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200 text-error text-xs font-medium flex items-start gap-2.5 animate-fade-in">
+              <AlertTriangle className="w-4 h-4 text-error shrink-0 mt-0.5" />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
+            {authMode === 'register' && (
+              <>
+                <div>
+                  <label className="text-xs font-semibold text-darkText block mb-1.5">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={authName}
+                    onChange={(e) => setAuthName(e.target.value)}
+                    placeholder="e.g. Aarav Sharma"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-borderSubtle outline-none focus:border-accent font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-darkText block mb-1.5">Mobile Number</label>
+                  <input
+                    type="tel"
+                    value={authPhone}
+                    onChange={(e) => setAuthPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-borderSubtle outline-none focus:border-accent font-medium"
+                  />
+                </div>
+              </>
+            )}
+
+            <div>
+              <label className="text-xs font-semibold text-darkText block mb-1.5">Email Address *</label>
+              <input
+                type="email"
+                required
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                placeholder="name@example.com"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-borderSubtle outline-none focus:border-accent font-medium"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-darkText">Password *</label>
+                {authMode === 'login' && (
+                  <button
+                    type="button"
+                    onClick={() => showToast("Password reset link has been dispatched to your email.", "info")}
+                    className="text-[11px] text-accent hover:underline font-semibold"
+                  >
+                    Forgot?
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type={showAuthPassword ? 'text' : 'password'}
+                  required
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  placeholder={authMode === 'register' ? 'At least 6 characters' : 'Enter your password'}
+                  className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-borderSubtle outline-none focus:border-accent font-medium"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowAuthPassword(!showAuthPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-mutedText hover:text-darkText p-1"
+                >
+                  {showAuthPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isAuthLoading}
+              className="w-full py-3.5 mt-2 bg-primary hover:bg-primary-hover active:scale-[0.99] text-white font-heading font-bold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isAuthLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4 text-accent" />
+                  <span>{authMode === 'login' ? 'Sign In to Account' : 'Complete Registration'}</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Quick Demo Login Pill for Customer Testing */}
+          <div className="mt-8 pt-5 border-t border-borderSubtle">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-mutedText block text-center mb-3">
+              One-Click Customer Demo Testing
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleQuickDemo(initialDemoUsers[0])}
+                className="p-2.5 rounded-lg border border-borderSubtle hover:border-accent bg-surface hover:bg-white text-left transition-all group"
+              >
+                <p className="font-heading font-bold text-[11px] text-darkText group-hover:text-accent">
+                  Aarav Sharma
+                </p>
+                <p className="text-[10px] text-mutedText truncate">aarav.sharma@example.com</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickDemo(initialDemoUsers[1])}
+                className="p-2.5 rounded-lg border border-borderSubtle hover:border-accent bg-surface hover:bg-white text-left transition-all group"
+              >
+                <p className="font-heading font-bold text-[11px] text-darkText group-hover:text-accent">
+                  Pooja Hegde
+                </p>
+                <p className="text-[10px] text-mutedText truncate">pooja.h@example.com</p>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
-
-  const userOrders = React.useMemo(() => {
-    if (!user) return [];
-    return orders.filter(
-      (o) =>
-        !o.customer?.email ||
-        o.customer?.email?.toLowerCase() === user.email?.toLowerCase() ||
-        o.customer?.name?.toLowerCase() === user.name?.toLowerCase()
-    );
-  }, [orders, user]);
 
   return (
     <div className="bg-secondary/40 min-h-screen py-10 px-4">

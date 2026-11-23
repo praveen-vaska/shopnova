@@ -116,6 +116,26 @@ export function ShopProvider({ children }) {
     syncWithDatabase();
   }, []);
 
+  // Sync customer-specific orders when logged-in customer changes
+  useEffect(() => {
+    if (!user?.email) return;
+    const fetchCustomerOrders = async () => {
+      try {
+        const res = await fetch(`/api/orders?email=${encodeURIComponent(user.email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.orders) {
+            setOrders(data.orders);
+            localStorage.setItem('shipflux_orders', JSON.stringify(data.orders));
+          }
+        }
+      } catch (e) {
+        console.warn('Customer orders fetch fallback:', e);
+      }
+    };
+    fetchCustomerOrders();
+  }, [user?.email]);
+
   // Save to LocalStorage
   const updateCart = (newCart) => {
     setCart(newCart);

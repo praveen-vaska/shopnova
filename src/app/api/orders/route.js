@@ -2,23 +2,34 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { orders as initialOrders } from '@/data/orders';
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email');
+
     if (!clientPromise) {
-      return NextResponse.json({ success: true, orders: initialOrders, source: 'mock' });
+      const filtered = email
+        ? initialOrders.filter(
+            (o) => o.customer?.email?.toLowerCase() === email.toLowerCase()
+          )
+        : initialOrders;
+      return NextResponse.json({ success: true, orders: filtered, source: 'mock' });
     }
 
     const client = await clientPromise;
     const db = client.db('shipflux');
     const collection = db.collection('orders');
 
-    let orders = await collection.find({}).sort({ _id: -1 }).toArray();
-
-    if (!orders || orders.length === 0) {
+    if ((await collection.countDocuments()) === 0) {
       const sanitized = initialOrders.map(({ _id, ...rest }) => rest);
       await collection.insertMany(sanitized);
-      orders = await collection.find({}).sort({ _id: -1 }).toArray();
     }
+
+    const query = email
+      ? { 'customer.email': { $regex: new RegExp(`^${email}$`, 'i') } }
+      : {};
+
+    const orders = await collection.find(query).sort({ _id: -1 }).toArray();
 
     return NextResponse.json({ success: true, orders, source: 'mongodb' });
   } catch (error) {
