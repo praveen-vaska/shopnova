@@ -15,8 +15,9 @@ export function ShopProvider({ children }) {
   const [coupons, setCoupons] = useState(initialCoupons);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
-  const [user, setUser] = useState(users[0]); // Default logged in as Aarav Sharma for demo
+  const [user, setUser] = useState(null); // Unauthenticated visitor by default
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [pendingCartItem, setPendingCartItem] = useState(null);
   
   // UI States
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
@@ -151,8 +152,46 @@ export function ShopProvider({ children }) {
     setUser(newUser);
     if (newUser) {
       localStorage.setItem('shipflux_user', JSON.stringify(newUser));
+
+      // If user was adding an item before signing in, fulfill it automatically!
+      if (pendingCartItem) {
+        const itemToAdd = pendingCartItem;
+        setPendingCartItem(null);
+        setTimeout(() => {
+          const color = itemToAdd.selectedColor || (itemToAdd.product.colors && itemToAdd.product.colors[0]?.name) || "Standard";
+          const size = itemToAdd.selectedSize || (itemToAdd.product.sizes && itemToAdd.product.sizes[0]) || "Standard";
+          const cartItemId = `${itemToAdd.product.id}-${color}-${size}`;
+
+          setCart((prevCart) => {
+            const existingIndex = prevCart.findIndex((item) => item.cartItemId === cartItemId);
+            let nextCart;
+            if (existingIndex > -1) {
+              nextCart = [...prevCart];
+              nextCart[existingIndex].quantity += itemToAdd.quantity;
+            } else {
+              nextCart = [
+                ...prevCart,
+                {
+                  cartItemId,
+                  product: itemToAdd.product,
+                  quantity: itemToAdd.quantity,
+                  selectedColor: color,
+                  selectedSize: size
+                }
+              ];
+            }
+            localStorage.setItem('shipflux_cart', JSON.stringify(nextCart));
+            return nextCart;
+          });
+
+          setIsAuthModalOpen(false);
+          setIsCartDrawerOpen(true);
+          showToast(`Welcome ${newUser.name}! "${itemToAdd.product.name}" was added to your bag.`, 'success');
+        }, 300);
+      }
     } else {
       localStorage.removeItem('shipflux_user');
+      localStorage.removeItem('shipflux_user_token');
     }
   };
 
@@ -170,6 +209,14 @@ export function ShopProvider({ children }) {
 
   // Cart operations
   const addToCart = (product, quantity = 1, selectedColor = null, selectedSize = null) => {
+    // If not logged in, prompt customer to sign in or register
+    if (!user) {
+      setPendingCartItem({ product, quantity, selectedColor, selectedSize });
+      setIsAuthModalOpen(true);
+      showToast("Please sign in or create an account to add items to your bag.", "info");
+      return false;
+    }
+
     const color = selectedColor || (product.colors && product.colors[0]?.name) || "Standard";
     const size = selectedSize || (product.sizes && product.sizes[0]) || "Standard";
     const cartItemId = `${product.id}-${color}-${size}`;
@@ -516,6 +563,8 @@ export function ShopProvider({ children }) {
         isSearchOpen,
         isAuthModalOpen,
         authMode,
+        pendingCartItem,
+        setPendingCartItem,
         toasts,
         cartSubtotal,
         cartDiscount,

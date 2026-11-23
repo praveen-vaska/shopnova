@@ -10,8 +10,8 @@ export async function GET(request) {
     if (!clientPromise) {
       const filtered = email
         ? initialOrders.filter(
-            (o) => o.customer?.email?.toLowerCase() === email.toLowerCase()
-          )
+          (o) => o.customer?.email?.toLowerCase() === email.toLowerCase()
+        )
         : initialOrders;
       return NextResponse.json({ success: true, orders: filtered, source: 'mock' });
     }
@@ -75,12 +75,12 @@ export async function PATCH(request) {
       const db = client.db('shipflux');
       await db.collection('orders').updateOne(
         { orderId },
-        { 
-          $set: { 
-            status: newStatus, 
+        {
+          $set: {
+            status: newStatus,
             ...(trackingTimeline ? { trackingTimeline } : {}),
-            updatedAt: new Date().toISOString() 
-          } 
+            updatedAt: new Date().toISOString()
+          }
         }
       );
     }

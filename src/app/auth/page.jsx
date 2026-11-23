@@ -88,17 +88,15 @@ export default function AuthPage() {
         <div className="grid grid-cols-2 p-1 bg-surface rounded-lg mb-6 text-xs font-heading font-bold">
           <button
             onClick={() => { setMode('login'); setAuthError(''); }}
-            className={`py-2 rounded-md transition-all ${
-              mode === 'login' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
-            }`}
+            className={`py-2 rounded-md transition-all ${mode === 'login' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
+              }`}
           >
             Sign In
           </button>
           <button
             onClick={() => { setMode('register'); setAuthError(''); }}
-            className={`py-2 rounded-md transition-all ${
-              mode === 'register' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
-            }`}
+            className={`py-2 rounded-md transition-all ${mode === 'register' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
+              }`}
           >
             Register
           </button>

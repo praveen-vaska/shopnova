@@ -91,7 +91,7 @@ export default function ProductDetailsPage() {
       return;
     }
     const success = addToCart(product, quantity, selectedColor, selectedSize || "Standard");
-    if (success !== false) {
+    if (success) {
       setIsCartDrawerOpen(true);
     }
   };
@@ -103,7 +103,7 @@ export default function ProductDetailsPage() {
       return;
     }
     const success = addToCart(product, quantity, selectedColor, selectedSize || "Standard");
-    if (success !== false) {
+    if (success) {
       router.push('/checkout');
     }
   };

@@ -5,16 +5,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
 import { users as initialDemoUsers } from '@/data/users';
-import { 
-  User, 
-  Package, 
-  MapPin, 
-  Heart, 
-  LogOut, 
-  ShieldCheck, 
-  ChevronRight, 
-  Check, 
-  Edit3, 
+import {
+  User,
+  Package,
+  MapPin,
+  Heart,
+  LogOut,
+  ShieldCheck,
+  ChevronRight,
+  Check,
+  Edit3,
   Plus,
   Truck,
   Eye,
@@ -120,12 +120,12 @@ export default function AccountPage() {
     const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
     const payload = authMode === 'login'
       ? { email: authEmail.trim(), password: authPassword }
-      : { 
-          name: authName.trim(), 
-          email: authEmail.trim(), 
-          password: authPassword, 
-          phone: authPhone.trim() 
-        };
+      : {
+        name: authName.trim(),
+        email: authEmail.trim(),
+        password: authPassword,
+        phone: authPhone.trim()
+      };
 
     try {
       const res = await fetch(endpoint, {
@@ -186,18 +186,16 @@ export default function AccountPage() {
             <button
               type="button"
               onClick={() => { setAuthMode('login'); setAuthError(''); }}
-              className={`py-2 rounded-md transition-all ${
-                authMode === 'login' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
-              }`}
+              className={`py-2 rounded-md transition-all ${authMode === 'login' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
+                }`}
             >
               Sign In
             </button>
             <button
               type="button"
               onClick={() => { setAuthMode('register'); setAuthError(''); }}
-              className={`py-2 rounded-md transition-all ${
-                authMode === 'register' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
-              }`}
+              className={`py-2 rounded-md transition-all ${authMode === 'register' ? 'bg-white text-primary shadow-sm' : 'text-mutedText hover:text-darkText'
+                }`}
             >
               Register
             </button>
@@ -381,9 +379,8 @@ export default function AccountPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-md transition-colors text-left ${
-                      isActive ? 'bg-primary text-white shadow-sm' : 'text-darkText hover:bg-surface'
-                    }`}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-md transition-colors text-left ${isActive ? 'bg-primary text-white shadow-sm' : 'text-darkText hover:bg-surface'
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{tab.label}</span>

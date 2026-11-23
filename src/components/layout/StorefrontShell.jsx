@@ -8,6 +8,7 @@ import Footer from '@/components/layout/Footer';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import CartDrawer from '@/components/cart/CartDrawer';
 import SearchModal from '@/components/ui/SearchModal';
+import AuthModal from '@/components/ui/AuthModal';
 
 export default function StorefrontShell({ children }) {
   const pathname = usePathname();
@@ -27,6 +28,7 @@ export default function StorefrontShell({ children }) {
       <MobileBottomNav />
       <CartDrawer />
       <SearchModal />
+      <AuthModal />
     </>
   );
 }
