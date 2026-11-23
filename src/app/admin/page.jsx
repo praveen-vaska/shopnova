@@ -323,7 +323,7 @@ export default function AdminDashboardPage() {
                   setAdminEmail(e.target.value);
                   if (loginError) setLoginError('');
                 }}
-                placeholder="admin@shipflux.com"
+                placeholder="Enter administrator email"
                 className="w-full px-3.5 py-2.5 rounded-lg border border-[#3A3A3A] bg-[#161616] text-white outline-none focus:border-accent font-medium disabled:opacity-50"
               />
             </div>
