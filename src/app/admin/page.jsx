@@ -28,6 +28,9 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   Eye, 
+  EyeOff,
+  Lock,
+  Loader2,
   Menu, 
   X,
   Calendar,
@@ -52,8 +55,12 @@ export default function AdminDashboardPage() {
   } = useShop();
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [adminEmail, setAdminEmail] = useState('admin@shipflux.com');
-  const [adminPass, setAdminPass] = useState('••••••••••••');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPass, setAdminPass] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [adminProfile, setAdminProfile] = useState(null);
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -64,25 +71,70 @@ export default function AdminDashboardPage() {
   // Load admin session
   React.useEffect(() => {
     try {
+      const token = localStorage.getItem('shipflux_admin_token');
       const session = localStorage.getItem('shipflux_admin_session');
-      if (session === 'true') {
+      const profile = localStorage.getItem('shipflux_admin_profile');
+      if (token && session === 'true') {
         setIsAdminLoggedIn(true);
+        if (profile) {
+          try {
+            setAdminProfile(JSON.parse(profile));
+          } catch (e) {}
+        }
+      } else {
+        setIsAdminLoggedIn(false);
       }
     } catch (e) {}
   }, []);
 
-  const handleAdminLogin = (e) => {
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
-    if (!adminEmail) return;
-    setIsAdminLoggedIn(true);
-    localStorage.setItem('shipflux_admin_session', 'true');
-    showToast('Admin Console Authenticated. Welcome!', 'success');
+    setLoginError('');
+
+    const trimmedEmail = adminEmail.trim();
+    if (!trimmedEmail || !adminPass) {
+      setLoginError('Please enter both your Admin Email and Password.');
+      return;
+    }
+
+    setIsAuthenticating(true);
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmedEmail, password: adminPass })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.token) {
+        localStorage.setItem('shipflux_admin_token', data.token);
+        localStorage.setItem('shipflux_admin_session', 'true');
+        if (data.admin) {
+          localStorage.setItem('shipflux_admin_profile', JSON.stringify(data.admin));
+          setAdminProfile(data.admin);
+        }
+        setIsAdminLoggedIn(true);
+        showToast('Admin Console Authenticated. Welcome!', 'success');
+      } else {
+        setLoginError(data.message || 'Invalid credentials. Access denied.');
+      }
+    } catch (err) {
+      setLoginError('Failed to communicate with authentication service. Check server connection.');
+    } finally {
+      setIsAuthenticating(false);
+    }
   };
 
   const handleAdminLogout = () => {
     setIsAdminLoggedIn(false);
+    localStorage.removeItem('shipflux_admin_token');
     localStorage.removeItem('shipflux_admin_session');
-    showToast('Admin session locked.', 'info');
+    localStorage.removeItem('shipflux_admin_profile');
+    setAdminEmail('');
+    setAdminPass('');
+    setLoginError('');
+    setAdminProfile(null);
+    showToast('Admin session locked and securely terminated.', 'info');
   };
 
   // Modals
@@ -246,45 +298,81 @@ export default function AdminDashboardPage() {
               Secure Operations, Inventory & Fulfillment Console
             </p>
             <span className="inline-block mt-3 px-3 py-1 rounded-full bg-error/15 border border-error/30 text-error text-[10px] font-bold uppercase tracking-wider">
-              Restricted Area • Separate Admin URL
+              Restricted Area • Authorized Access Only
             </span>
           </div>
+
+          {loginError && (
+            <div className="mb-5 p-3 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start gap-2.5 text-xs text-red-400 animate-fade-in">
+              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+              <span>{loginError}</span>
+            </div>
+          )}
 
           <form onSubmit={handleAdminLogin} className="space-y-4 text-xs">
             <div>
               <label className="text-xs font-semibold text-gray-300 block mb-1.5">
-                Admin Console ID / Email
+                Admin Email / Console ID
               </label>
               <input
                 type="email"
                 required
+                disabled={isAuthenticating}
                 value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
+                onChange={(e) => {
+                  setAdminEmail(e.target.value);
+                  if (loginError) setLoginError('');
+                }}
                 placeholder="admin@shipflux.com"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#3A3A3A] bg-[#161616] text-white outline-none focus:border-accent font-medium"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-[#3A3A3A] bg-[#161616] text-white outline-none focus:border-accent font-medium disabled:opacity-50"
               />
             </div>
 
             <div>
               <label className="text-xs font-semibold text-gray-300 block mb-1.5">
-                Secure Passkey / Credential
+                Admin Password
               </label>
-              <input
-                type="password"
-                required
-                value={adminPass}
-                onChange={(e) => setAdminPass(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#3A3A3A] bg-[#161616] text-white outline-none focus:border-accent font-medium tracking-widest"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  disabled={isAuthenticating}
+                  value={adminPass}
+                  onChange={(e) => {
+                    setAdminPass(e.target.value);
+                    if (loginError) setLoginError('');
+                  }}
+                  placeholder="Enter administrator password"
+                  className="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-[#3A3A3A] bg-[#161616] text-white outline-none focus:border-accent font-medium tracking-normal disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3.5 mt-2 bg-accent hover:bg-accent-hover text-white font-heading font-bold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all flex items-center justify-center gap-2"
+              disabled={isAuthenticating}
+              className="w-full py-3.5 mt-2 bg-accent hover:bg-accent-hover active:scale-[0.99] text-white font-heading font-bold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Authenticate & Enter Console</span>
+              {isAuthenticating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Verifying Credentials...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  <span>Authenticate & Enter Console</span>
+                </>
+              )}
             </button>
           </form>
 
@@ -413,10 +501,10 @@ export default function AdminDashboardPage() {
             </button>
             <div>
               <h1 className="font-heading font-bold text-base sm:text-lg text-primary leading-tight">
-                Welcome back, Admin!
+                Welcome back, {adminProfile?.name ? adminProfile.name.split(' ')[0] : 'Admin'}!
               </h1>
               <p className="text-[11px] text-mutedText hidden sm:block">
-                Shipflux Commercial Operations Portal
+                Shipflux Commercial Operations Portal {adminProfile?.role && `• ${adminProfile.role.toUpperCase()}`}
               </p>
             </div>
           </div>
