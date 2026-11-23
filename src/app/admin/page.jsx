@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useShop } from '@/context/ShopContext';
+import ProductImagePicker from '@/components/admin/ProductImagePicker';
 import { categories as initialCategories } from '@/data/categories';
 import { banners as initialBanners } from '@/data/banners';
 import { users as initialCustomers } from '@/data/users';
@@ -162,13 +163,15 @@ export default function AdminDashboardPage() {
   const handleUpdateProductSubmit = (e) => {
     e.preventDefault();
     if (!editingProduct) return;
+    const prodImg = editingProduct.image || editingProduct.images?.[0];
     updateProduct(editingProduct.id, {
       name: editingProduct.name,
       price: Number(editingProduct.price),
       originalPrice: Number(editingProduct.originalPrice),
       stock: Number(editingProduct.stock),
       brand: editingProduct.brand,
-      category: editingProduct.category
+      category: editingProduct.category,
+      ...(prodImg ? { image: prodImg, images: [prodImg] } : {})
     });
     setEditingProduct(null);
   };
@@ -1133,16 +1136,10 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="font-bold text-darkText block mb-1">Image URL</label>
-                <input
-                  type="url"
-                  required
-                  value={newProd.image}
-                  onChange={(e) => setNewProd({ ...newProd, image: e.target.value })}
-                  className="w-full px-3 py-2 rounded border border-borderSubtle outline-none focus:border-accent"
-                />
-              </div>
+              <ProductImagePicker
+                value={newProd.image}
+                onChange={(img) => setNewProd({ ...newProd, image: img })}
+              />
 
               <div>
                 <label className="font-bold text-darkText block mb-1">Description</label>
@@ -1227,6 +1224,12 @@ export default function AdminDashboardPage() {
                   />
                 </div>
               </div>
+
+              <ProductImagePicker
+                value={editingProduct.image || editingProduct.images?.[0] || ''}
+                onChange={(img) => setEditingProduct({ ...editingProduct, image: img, images: [img] })}
+              />
+
               <div className="flex justify-end gap-2 pt-3 border-t border-borderSubtle">
                 <button
                   type="button"
@@ -1300,6 +1303,7 @@ export default function AdminDashboardPage() {
                   />
                 </div>
               </div>
+
               <div className="flex justify-end gap-2 pt-3 border-t border-borderSubtle">
                 <button
                   type="button"
