@@ -25,8 +25,9 @@ export function ShopProvider({ children }) {
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
   const [toasts, setToasts] = useState([]);
 
-  // Load from LocalStorage on mount
+  // Load from LocalStorage and sync with MongoDB
   useEffect(() => {
+    // 1. Initial immediate load from local storage
     try {
       const storedCart = localStorage.getItem('shipflux_cart');
       if (storedCart) setCart(JSON.parse(storedCart));
@@ -48,6 +49,37 @@ export function ShopProvider({ children }) {
     } catch (e) {
       console.error("Failed to load local state", e);
     }
+
+    // 2. Fetch live data from MongoDB
+    const syncWithDatabase = async () => {
+      try {
+        const pRes = await fetch('/api/products');
+        if (pRes.ok) {
+          const pData = await pRes.json();
+          if (pData.products && pData.products.length > 0) {
+            setProducts(pData.products);
+            localStorage.setItem('shipflux_products', JSON.stringify(pData.products));
+          }
+        }
+      } catch (err) {
+        console.warn('MongoDB products sync fallback to local cache:', err);
+      }
+
+      try {
+        const oRes = await fetch('/api/orders');
+        if (oRes.ok) {
+          const oData = await oRes.json();
+          if (oData.orders && oData.orders.length > 0) {
+            setOrders(oData.orders);
+            localStorage.setItem('shipflux_orders', JSON.stringify(oData.orders));
+          }
+        }
+      } catch (err) {
+        console.warn('MongoDB orders sync fallback to local cache:', err);
+      }
+    };
+
+    syncWithDatabase();
   }, []);
 
   // Save to LocalStorage
@@ -269,37 +301,83 @@ export function ShopProvider({ children }) {
     setOrders(updatedOrders);
     localStorage.setItem('shipflux_orders', JSON.stringify(updatedOrders));
     clearCart();
+
+    // Persist to MongoDB
+    try {
+      fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newOrder)
+      });
+    } catch (e) {
+      console.error('Failed to sync order with MongoDB:', e);
+    }
+
     return newOrder;
   };
 
   // Admin Management Functions
-  const addProduct = (newProduct) => {
+  const addProduct = async (newProduct) => {
     const id = `prod-${Date.now()}`;
     const slug = newProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const created = { ...newProduct, id, slug };
     const updated = [created, ...products];
     setProducts(updated);
     localStorage.setItem('shipflux_products', JSON.stringify(updated));
-    showToast(`Product "${created.name}" created successfully!`, 'success');
+
+    // Persist to MongoDB
+    try {
+      await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(created)
+      });
+    } catch (e) {
+      console.error('Failed to sync product with MongoDB:', e);
+    }
+
+    showToast(`Product "${created.name}" created and synced!`, 'success');
     return created;
   };
 
-  const updateProduct = (id, updatedFields) => {
+  const updateProduct = async (id, updatedFields) => {
     const updated = products.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
     setProducts(updated);
     localStorage.setItem('shipflux_products', JSON.stringify(updated));
+
+    // Persist to MongoDB
+    try {
+      await fetch('/api/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...updatedFields })
+      });
+    } catch (e) {
+      console.error('Failed to update product in MongoDB:', e);
+    }
+
     showToast("Product updated successfully!", 'success');
   };
 
-  const deleteProduct = (id) => {
+  const deleteProduct = async (id) => {
     const prod = products.find(p => p.id === id);
     const updated = products.filter((p) => p.id !== id);
     setProducts(updated);
     localStorage.setItem('shipflux_products', JSON.stringify(updated));
+
+    // Persist to MongoDB
+    try {
+      await fetch(`/api/products?id=${id}`, {
+        method: 'DELETE'
+      });
+    } catch (e) {
+      console.error('Failed to delete product in MongoDB:', e);
+    }
+
     showToast(`Product "${prod?.name || id}" removed`, 'info');
   };
 
-  const updateOrderStatus = (orderId, newStatus) => {
+  const updateOrderStatus = async (orderId, newStatus) => {
     const updated = orders.map((ord) => {
       if (ord.orderId === orderId) {
         const steps = ["Order Placed", "Confirmed", "Packed", "Shipped", "Out for Delivery", "Delivered"];
@@ -318,6 +396,23 @@ export function ShopProvider({ children }) {
     });
     setOrders(updated);
     localStorage.setItem('shipflux_orders', JSON.stringify(updated));
+
+    // Persist to MongoDB
+    try {
+      const target = updated.find(o => o.orderId === orderId);
+      await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          orderId, 
+          newStatus, 
+          trackingTimeline: target?.trackingTimeline 
+        })
+      });
+    } catch (e) {
+      console.error('Failed to update order in MongoDB:', e);
+    }
+
     showToast(`Order ${orderId} status updated to ${newStatus}`, 'success');
   };
 
