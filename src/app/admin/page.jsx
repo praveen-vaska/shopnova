@@ -36,7 +36,8 @@ import {
   Calendar,
   ChevronDown,
   ShieldCheck,
-  ArrowRight
+  ArrowRight,
+  ExternalLink
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/utils/format';
 
@@ -68,6 +69,10 @@ export default function AdminDashboardPage() {
   const [productSearch, setProductSearch] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('all');
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+  const [inventorySearch, setInventorySearch] = useState('');
+  const [inventoryStockFilter, setInventoryStockFilter] = useState('all'); // 'all' | 'low' | 'out' | 'optimal'
+  const [inventoryCategoryFilter, setInventoryCategoryFilter] = useState('all');
+  const [stockInputValues, setStockInputValues] = useState({});
 
   // Load admin session
   React.useEffect(() => {
@@ -230,12 +235,39 @@ export default function AdminDashboardPage() {
     setEditingProduct(null);
   };
 
+  // Handle Stock Input in Inventory Tab
+  const handleStockInputChange = (prodId, val) => {
+    setStockInputValues(prev => ({ ...prev, [prodId]: val }));
+  };
+
+  const handleStockInputCommit = (prodId) => {
+    if (stockInputValues[prodId] === undefined) return;
+    const val = stockInputValues[prodId];
+    const num = parseInt(val, 10);
+    if (!isNaN(num) && num >= 0) {
+      updateProduct(prodId, { stock: num });
+      showToast(`Stock updated to ${num} units`, 'success');
+    }
+    setStockInputValues(prev => {
+      const next = { ...prev };
+      delete next[prodId];
+      return next;
+    });
+  };
+
   // Handle Quick Stock Adjust in Inventory Tab
   const handleAdjustStock = (prodId, delta) => {
     const prod = products.find(p => p.id === prodId);
     if (!prod) return;
-    const newStock = Math.max(0, prod.stock + delta);
+    const current = stockInputValues[prodId] !== undefined ? parseInt(stockInputValues[prodId], 10) || prod.stock : prod.stock;
+    const newStock = Math.max(0, current + delta);
     updateProduct(prodId, { stock: newStock });
+    setStockInputValues(prev => {
+      const next = { ...prev };
+      delete next[prodId];
+      return next;
+    });
+    showToast(`Stock updated to ${newStock} units`, 'info');
   };
 
   // Handle Add Coupon Submit
@@ -261,6 +293,19 @@ export default function AdminDashboardPage() {
     if (productCategoryFilter !== 'all' && p.category !== productCategoryFilter) return false;
     if (productSearch.trim()) {
       const q = productSearch.toLowerCase();
+      return p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.id.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  // Filtered Products for Inventory Tab
+  const filteredInventoryProducts = products.filter((p) => {
+    if (inventoryStockFilter === 'low' && !(p.stock > 0 && p.stock < 15)) return false;
+    if (inventoryStockFilter === 'out' && p.stock !== 0) return false;
+    if (inventoryStockFilter === 'optimal' && p.stock < 15) return false;
+    if (inventoryCategoryFilter !== 'all' && p.category !== inventoryCategoryFilter) return false;
+    if (inventorySearch.trim()) {
+      const q = inventorySearch.toLowerCase();
       return p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.id.toLowerCase().includes(q);
     }
     return true;
@@ -858,13 +903,22 @@ export default function AdminDashboardPage() {
                         filteredAdminProducts.map((p) => (
                           <tr key={p.id} className="hover:bg-surface/50">
                             <td className="p-3.5">
-                              <div className="flex items-center gap-3">
-                                <img src={p.images[0]} alt="" className="w-11 h-12 object-cover rounded bg-surface" />
+                              <Link
+                                href={`/product/${p.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 group/prod"
+                                title={`View ${p.name} on storefront (opens in new tab)`}
+                              >
+                                <img src={p.images[0]} alt="" className="w-11 h-12 object-cover rounded bg-surface group-hover/prod:scale-105 transition-transform" />
                                 <div>
-                                  <p className="font-bold text-darkText truncate max-w-xs">{p.name}</p>
+                                  <p className="font-bold text-darkText group-hover/prod:text-accent transition-colors truncate max-w-xs flex items-center gap-1.5">
+                                    <span>{p.name}</span>
+                                    <ExternalLink className="w-3.5 h-3.5 text-mutedText opacity-0 group-hover/prod:opacity-100 group-hover/prod:text-accent transition-opacity shrink-0" />
+                                  </p>
                                   <p className="text-[11px] text-mutedText">{p.brand} • {p.id}</p>
                                 </div>
-                              </div>
+                              </Link>
                             </td>
                             <td className="p-3.5 font-medium capitalize text-mutedText">{p.category}</td>
                             <td className="p-3.5 font-bold text-darkText">{formatCurrency(p.price)}</td>
@@ -998,70 +1052,265 @@ export default function AdminDashboardPage() {
           {/* TAB 4: INVENTORY MANAGEMENT */}
           {activeTab === 'inventory' && (
             <div className="space-y-6">
-              <div className="bg-white p-5 rounded-xl border border-borderSubtle shadow-subtle flex items-center justify-between">
+              {/* Top Header Card with Quick Interactive Stock Filter Pills */}
+              <div className="bg-white p-5 rounded-xl border border-borderSubtle shadow-subtle flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h3 className="font-heading font-bold text-lg text-primary">Warehouse Stock Adjuster</h3>
-                  <p className="text-xs text-mutedText">Increment or decrement live inventory. Changes sync immediately with the storefront.</p>
+                  <p className="text-xs text-mutedText mt-0.5">
+                    Increment, decrement, or type exact stock units. Changes sync live with your storefront.
+                  </p>
                 </div>
-                <div className="flex gap-4 text-xs font-bold">
-                  <span className="text-error">{products.filter(p => p.stock === 0).length} Out of Stock</span>
-                  <span className="text-warning">{products.filter(p => p.stock > 0 && p.stock < 15).length} Low Stock</span>
+
+                {/* Clickable Quick Status Filter Pills */}
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setInventoryStockFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg font-heading font-semibold transition-all ${
+                      inventoryStockFilter === 'all'
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'bg-surface hover:bg-surface/80 text-darkText border border-borderSubtle'
+                    }`}
+                  >
+                    All Stock ({products.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInventoryStockFilter(inventoryStockFilter === 'low' ? 'all' : 'low')}
+                    className={`px-3 py-1.5 rounded-lg font-heading font-semibold transition-all flex items-center gap-1.5 ${
+                      inventoryStockFilter === 'low'
+                        ? 'bg-warning text-white shadow-xs ring-2 ring-warning/30'
+                        : 'bg-warning-bg/50 hover:bg-warning-bg text-warning border border-warning/30'
+                    }`}
+                    title="Filter to show only Low Stock items (< 15 units)"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-warning" />
+                    <span>{products.filter(p => p.stock > 0 && p.stock < 15).length} Low Stock</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInventoryStockFilter(inventoryStockFilter === 'out' ? 'all' : 'out')}
+                    className={`px-3 py-1.5 rounded-lg font-heading font-semibold transition-all flex items-center gap-1.5 ${
+                      inventoryStockFilter === 'out'
+                        ? 'bg-error text-white shadow-xs ring-2 ring-error/30'
+                        : 'bg-error-bg/50 hover:bg-error-bg text-error border border-error/30'
+                    }`}
+                    title="Filter to show only Out of Stock items"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-error" />
+                    <span>{products.filter(p => p.stock === 0).length} Out of Stock</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInventoryStockFilter(inventoryStockFilter === 'optimal' ? 'all' : 'optimal')}
+                    className={`px-3 py-1.5 rounded-lg font-heading font-semibold transition-all flex items-center gap-1.5 ${
+                      inventoryStockFilter === 'optimal'
+                        ? 'bg-success text-white shadow-xs ring-2 ring-success/30'
+                        : 'bg-success-bg/50 hover:bg-success-bg text-success border border-success/30'
+                    }`}
+                    title="Filter to show Optimal stock items (≥ 15 units)"
+                  >
+                    <span>{products.filter(p => p.stock >= 15).length} Optimal</span>
+                  </button>
                 </div>
               </div>
 
+              {/* Inventory Search & Category Filter Toolbar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-borderSubtle shadow-subtle">
+                <div className="flex flex-wrap items-center gap-3 flex-1">
+                  <div className="relative w-full sm:w-72">
+                    <Search className="w-4 h-4 text-mutedText absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search inventory by title, ID or brand..."
+                      value={inventorySearch}
+                      onChange={(e) => setInventorySearch(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded border border-borderSubtle outline-none focus:border-accent"
+                    />
+                  </div>
+                  <select
+                    value={inventoryCategoryFilter}
+                    onChange={(e) => setInventoryCategoryFilter(e.target.value)}
+                    className="py-2 px-3 text-xs rounded border border-borderSubtle bg-white font-semibold cursor-pointer"
+                  >
+                    <option value="all">All Categories ({products.length})</option>
+                    {initialCategories.map(c => {
+                      const count = products.filter(p => p.category === c.id).length;
+                      return (
+                        <option key={c.id} value={c.id}>{c.name} ({count})</option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div className="text-xs text-mutedText flex items-center gap-2">
+                  <span>Showing <strong className="text-primary font-bold">{filteredInventoryProducts.length}</strong> of {products.length} products</span>
+                </div>
+              </div>
+
+              {/* Active Filter Indicator Banner */}
+              {(inventoryStockFilter !== 'all' || inventoryCategoryFilter !== 'all' || inventorySearch) && (
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-accent/10 border border-accent/30 px-4 py-2.5 rounded-xl text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-heading font-bold text-primary">Active Filters:</span>
+                    {inventoryStockFilter !== 'all' && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-accent text-white font-bold text-[11px] capitalize">
+                        Status: {inventoryStockFilter === 'low' ? 'Low Stock (< 15)' : inventoryStockFilter === 'out' ? 'Out of Stock (0)' : 'Optimal Stock (≥ 15)'}
+                      </span>
+                    )}
+                    {inventoryCategoryFilter !== 'all' && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-primary text-white font-bold text-[11px]">
+                        Category: {initialCategories.find(c => c.id === inventoryCategoryFilter)?.name || inventoryCategoryFilter}
+                      </span>
+                    )}
+                    {inventorySearch && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-white text-darkText border border-borderSubtle font-semibold text-[11px]">
+                        Search: "{inventorySearch}"
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setInventoryStockFilter('all');
+                      setInventoryCategoryFilter('all');
+                      setInventorySearch('');
+                    }}
+                    className="px-3 py-1 bg-white hover:bg-surface border border-borderSubtle text-primary hover:text-accent font-heading font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-xs"
+                  >
+                    <span>Clear All Filters</span>
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Inventory Table */}
               <div className="bg-white rounded-xl border border-borderSubtle shadow-subtle overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-surface text-mutedText uppercase tracking-wider text-[10px]">
-                    <tr>
-                      <th className="p-3.5 font-bold">Product Item</th>
-                      <th className="p-3.5 font-bold">Current Stock</th>
-                      <th className="p-3.5 font-bold">Status</th>
-                      <th className="p-3.5 font-bold text-right">Quick Stock Adjustment</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-borderSubtle">
-                    {products.map((p) => (
-                      <tr key={p.id} className="hover:bg-surface/50">
-                        <td className="p-3.5">
-                          <div className="flex items-center gap-3">
-                            <img src={p.images[0]} alt="" className="w-10 h-10 object-cover rounded bg-surface" />
-                            <div>
-                              <p className="font-bold text-darkText">{p.name}</p>
-                              <p className="text-[11px] text-mutedText">{p.brand} • {formatCurrency(p.price)}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3.5 font-heading font-bold text-sm text-darkText">{p.stock}</td>
-                        <td className="p-3.5">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            p.stock === 0 ? 'bg-error-bg text-error' : p.stock < 15 ? 'bg-warning-bg text-warning' : 'bg-success-bg text-success'
-                          }`}>
-                            {p.stock === 0 ? 'Out of Stock' : p.stock < 15 ? 'Low Stock' : 'Optimal'}
-                          </span>
-                        </td>
-                        <td className="p-3.5 text-right">
-                          <div className="inline-flex items-center border border-borderSubtle rounded bg-white">
-                            <button
-                              onClick={() => handleAdjustStock(p.id, -1)}
-                              className="w-8 h-8 flex items-center justify-center font-bold text-darkText hover:bg-surface"
-                              title="Decrease stock by 1"
-                            >
-                              -
-                            </button>
-                            <span className="w-10 text-center font-bold text-xs">{p.stock}</span>
-                            <button
-                              onClick={() => handleAdjustStock(p.id, +5)}
-                              className="px-2.5 h-8 flex items-center justify-center font-bold text-xs text-accent hover:bg-surface"
-                              title="Add 5 units"
-                            >
-                              +5
-                            </button>
-                          </div>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-surface text-mutedText uppercase tracking-wider text-[10px]">
+                      <tr>
+                        <th className="p-3.5 font-bold">Product Item</th>
+                        <th className="p-3.5 font-bold">Category</th>
+                        <th className="p-3.5 font-bold">Current Stock</th>
+                        <th className="p-3.5 font-bold">Status</th>
+                        <th className="p-3.5 font-bold text-right">Quick Stock Adjustment</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-borderSubtle">
+                      {filteredInventoryProducts.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="p-12 text-center text-mutedText">
+                            <Layers className="w-10 h-10 text-mutedText/30 mx-auto mb-3" />
+                            <p className="font-heading font-bold text-darkText text-sm">No inventory items match your filter</p>
+                            <p className="text-xs text-mutedText mt-1 max-w-sm mx-auto">
+                              Try clearing your search query or selecting a different stock level.
+                            </p>
+                            <button
+                              onClick={() => {
+                                setInventoryStockFilter('all');
+                                setInventoryCategoryFilter('all');
+                                setInventorySearch('');
+                              }}
+                              className="mt-4 px-4 py-2 bg-primary text-white text-xs font-heading font-semibold rounded-lg hover:bg-primary-hover transition-colors"
+                            >
+                              Show All Warehouse Inventory ({products.length})
+                            </button>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredInventoryProducts.map((p) => (
+                          <tr key={p.id} className="hover:bg-surface/50">
+                            <td className="p-3.5">
+                              <Link
+                                href={`/product/${p.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 group/prod"
+                                title={`Open ${p.name} details in store (opens in new tab)`}
+                              >
+                                <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-surface shrink-0 border border-borderSubtle">
+                                  <img
+                                    src={p.images[0]}
+                                    alt={p.name}
+                                    className="w-full h-full object-cover group-hover/prod:scale-110 transition-transform duration-300"
+                                  />
+                                  <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/prod:opacity-100 transition-opacity flex items-center justify-center">
+                                    <ExternalLink className="w-3.5 h-3.5 text-white" />
+                                  </div>
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-darkText group-hover/prod:text-accent transition-colors truncate max-w-xs flex items-center gap-1.5">
+                                    <span>{p.name}</span>
+                                    <ExternalLink className="w-3 h-3 text-mutedText opacity-0 group-hover/prod:opacity-100 group-hover/prod:text-accent transition-opacity shrink-0" />
+                                  </p>
+                                  <p className="text-[11px] text-mutedText">{p.brand} • {formatCurrency(p.price)}</p>
+                                </div>
+                              </Link>
+                            </td>
+                            <td className="p-3.5 font-medium capitalize text-mutedText">{p.category}</td>
+                            <td className="p-3.5 font-heading font-bold text-sm text-darkText">
+                              <span className={`px-2 py-0.5 rounded font-bold text-xs ${
+                                p.stock === 0 ? 'bg-error-bg text-error' : p.stock < 15 ? 'bg-warning-bg text-warning' : 'bg-surface text-primary'
+                              }`}>
+                                {p.stock} units
+                              </span>
+                            </td>
+                            <td className="p-3.5">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                p.stock === 0 ? 'bg-error-bg text-error' : p.stock < 15 ? 'bg-warning-bg text-warning' : 'bg-success-bg text-success'
+                              }`}>
+                                {p.stock === 0 ? 'Out of Stock' : p.stock < 15 ? 'Low Stock' : 'Optimal'}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-right">
+                              <div className="inline-flex items-center border border-borderSubtle rounded-lg bg-white overflow-hidden shadow-xs">
+                                <button
+                                  type="button"
+                                  onClick={() => handleAdjustStock(p.id, -1)}
+                                  className="w-8 h-8 flex items-center justify-center font-bold text-darkText hover:bg-surface border-r border-borderSubtle active:bg-surface/80 transition-colors"
+                                  title="Decrease stock by 1"
+                                >
+                                  -1
+                                </button>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={stockInputValues[p.id] !== undefined ? stockInputValues[p.id] : p.stock}
+                                  onChange={(e) => handleStockInputChange(p.id, e.target.value)}
+                                  onBlur={() => handleStockInputCommit(p.id)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleStockInputCommit(p.id);
+                                      e.target.blur();
+                                    }
+                                  }}
+                                  className="w-14 h-8 text-center font-heading font-bold text-xs text-darkText bg-transparent outline-none focus:bg-accent/10 focus:text-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  title="Type custom quantity and press Enter"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleAdjustStock(p.id, +1)}
+                                  className="w-8 h-8 flex items-center justify-center font-bold text-darkText hover:bg-surface border-l border-r border-borderSubtle active:bg-surface/80 transition-colors"
+                                  title="Add 1 unit"
+                                >
+                                  +1
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleAdjustStock(p.id, +5)}
+                                  className="px-2.5 h-8 flex items-center justify-center font-bold text-xs text-accent hover:bg-surface active:bg-surface/80 transition-colors"
+                                  title="Add 5 units"
+                                >
+                                  +5
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
