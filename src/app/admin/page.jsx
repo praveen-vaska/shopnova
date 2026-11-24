@@ -545,12 +545,6 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded bg-surface border border-borderSubtle text-xs font-semibold text-darkText">
-              <Calendar className="w-3.5 h-3.5 text-accent" />
-              <span>Last 30 Days</span>
-              <ChevronDown className="w-3.5 h-3.5 text-mutedText" />
-            </div>
-
             <Link
               href="/"
               target="_blank"
@@ -1471,7 +1465,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* Customer Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {filteredCustomers.length === 0 ? (
                     <div className="col-span-full p-12 text-center bg-white rounded-xl border border-borderSubtle shadow-subtle">
                       <Users className="w-10 h-10 text-mutedText/30 mx-auto mb-3" />
@@ -1506,32 +1500,32 @@ export default function AdminDashboardPage() {
                               setSelectedCustomer(cust);
                             }
                           }}
-                          className="p-5 rounded-xl border border-borderSubtle bg-surface hover:bg-white hover:border-accent hover:shadow-card hover:-translate-y-1 cursor-pointer transition-all duration-300 flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-accent"
+                          className="p-4 rounded-xl border border-borderSubtle bg-surface hover:bg-white hover:border-accent hover:shadow-card hover:-translate-y-0.5 cursor-pointer transition-all duration-200 flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-accent"
                           title={`Click to view ${cust.name}'s profile and ${displayOrdersCount} orders`}
                         >
                           <div>
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-center gap-3">
                               <img
                                 src={cust.avatar}
                                 alt={cust.name}
-                                className="w-13 h-13 rounded-full object-cover border-2 border-borderSubtle group-hover:border-accent transition-colors shrink-0"
+                                className="w-11 h-11 rounded-full object-cover border border-borderSubtle group-hover:border-accent transition-colors shrink-0"
                               />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                  <h4 className="font-heading font-bold text-sm text-darkText group-hover:text-accent transition-colors truncate">
+                                  <h4 className="font-heading font-bold text-xs sm:text-sm text-darkText group-hover:text-accent transition-colors truncate">
                                     {cust.name}
                                   </h4>
                                   {cust.role === 'admin' ? (
-                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700">Admin</span>
+                                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-100 text-purple-700">Admin</span>
                                   ) : (
-                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-accent/15 text-accent">Shopper</span>
+                                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-accent/15 text-accent">Shopper</span>
                                   )}
                                 </div>
-                                <p className="text-xs text-mutedText truncate mt-0.5 flex items-center gap-1">
+                                <p className="text-[11px] text-mutedText truncate mt-0.5 flex items-center gap-1">
                                   <Mail className="w-3 h-3 text-mutedText/70 shrink-0" />
                                   <span className="truncate">{cust.email}</span>
                                 </p>
-                                <p className="text-xs text-mutedText mt-0.5 flex items-center gap-1">
+                                <p className="text-[11px] text-mutedText mt-0.5 flex items-center gap-1">
                                   <Phone className="w-3 h-3 text-mutedText/70 shrink-0" />
                                   <span>{cust.phone}</span>
                                 </p>
@@ -1539,18 +1533,18 @@ export default function AdminDashboardPage() {
                             </div>
                           </div>
 
-                          <div className="mt-4 pt-3 border-t border-borderSubtle/60 flex items-center justify-between text-xs">
-                            <span className="text-mutedText">
+                          <div className="mt-3 pt-2.5 border-t border-borderSubtle/60 flex items-center justify-between text-xs">
+                            <span className="text-mutedText text-[11px]">
                               Orders: <strong className="text-primary font-bold">{displayOrdersCount}</strong>
                             </span>
-                            <span className="font-heading font-extrabold text-accent">
+                            <span className="font-heading font-extrabold text-accent text-xs">
                               {formatCurrency(displayTotalSpent)}
                             </span>
                           </div>
 
-                          <div className="mt-2.5 pt-2 border-t border-borderSubtle/40 flex items-center justify-between text-[11px] font-heading font-semibold text-primary group-hover:text-accent transition-colors">
+                          <div className="mt-2 pt-1.5 border-t border-borderSubtle/40 flex items-center justify-between text-[10px] font-heading font-bold text-primary group-hover:text-accent transition-colors">
                             <span>View Orders & Details</span>
-                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                           </div>
                         </div>
                       );
