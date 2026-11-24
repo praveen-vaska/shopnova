@@ -1,6 +1,5 @@
 import './globals.css';
 import { ShopProvider } from '@/context/ShopContext';
-import CustomCursor from '@/components/ui/CustomCursor';
 import ToastContainer from '@/components/ui/ToastContainer';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import StorefrontShell from '@/components/layout/StorefrontShell';
@@ -15,7 +14,6 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="flex flex-col min-h-screen relative selection:bg-accent selection:text-white pb-16 lg:pb-0">
         <ShopProvider>
-          <CustomCursor />
           <ToastContainer />
           <ConfirmModal />
           <StorefrontShell>

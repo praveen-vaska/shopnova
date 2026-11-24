@@ -24,6 +24,10 @@ export default function QuickViewModal({ product, onClose }) {
       showToast("Please choose a size before adding to cart.", "error");
       return;
     }
+    const success = addToCart(product, quantity, selectedColor, selectedSize || "Standard");
+    if (success !== false) {
+      onClose();
+    }
     addToCart(product, quantity, selectedColor, selectedSize || "Standard");
     onClose();
   };
