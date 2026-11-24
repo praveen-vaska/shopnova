@@ -26,6 +26,7 @@ import {
   TrendingUp, 
   DollarSign, 
   CheckCircle2, 
+  Check,
   AlertTriangle, 
   Eye, 
   EyeOff,
@@ -79,7 +80,8 @@ export default function AdminDashboardPage() {
   const [inventorySearch, setInventorySearch] = useState('');
   const [inventoryStockFilter, setInventoryStockFilter] = useState('all'); // 'all' | 'low' | 'out' | 'optimal'
   const [inventoryCategoryFilter, setInventoryCategoryFilter] = useState('all');
-  const [stockInputValues, setStockInputValues] = useState({});
+  const [editingStockId, setEditingStockId] = useState(null);
+  const [editingStockVal, setEditingStockVal] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerSearch, setCustomerSearch] = useState('');
 
@@ -244,39 +246,17 @@ export default function AdminDashboardPage() {
     setEditingProduct(null);
   };
 
-  // Handle Stock Input in Inventory Tab
-  const handleStockInputChange = (prodId, val) => {
-    setStockInputValues(prev => ({ ...prev, [prodId]: val }));
-  };
-
-  const handleStockInputCommit = (prodId) => {
-    if (stockInputValues[prodId] === undefined) return;
-    const val = stockInputValues[prodId];
-    const num = parseInt(val, 10);
+  // Handle Save Inline Stock in Inventory Tab
+  const handleSaveInlineStock = (prodId) => {
+    const num = parseInt(editingStockVal, 10);
     if (!isNaN(num) && num >= 0) {
       updateProduct(prodId, { stock: num });
       showToast(`Stock updated to ${num} units`, 'success');
+    } else {
+      showToast('Please enter a valid stock number (0 or higher)', 'error');
     }
-    setStockInputValues(prev => {
-      const next = { ...prev };
-      delete next[prodId];
-      return next;
-    });
-  };
-
-  // Handle Quick Stock Adjust in Inventory Tab
-  const handleAdjustStock = (prodId, delta) => {
-    const prod = products.find(p => p.id === prodId);
-    if (!prod) return;
-    const current = stockInputValues[prodId] !== undefined ? parseInt(stockInputValues[prodId], 10) || prod.stock : prod.stock;
-    const newStock = Math.max(0, current + delta);
-    updateProduct(prodId, { stock: newStock });
-    setStockInputValues(prev => {
-      const next = { ...prev };
-      delete next[prodId];
-      return next;
-    });
-    showToast(`Stock updated to ${newStock} units`, 'info');
+    setEditingStockId(null);
+    setEditingStockVal('');
   };
 
   // Handle Add Coupon Submit
@@ -1200,9 +1180,9 @@ export default function AdminDashboardPage() {
                       <tr>
                         <th className="p-3.5 font-bold">Product Item</th>
                         <th className="p-3.5 font-bold">Category</th>
-                        <th className="p-3.5 font-bold">Current Stock</th>
                         <th className="p-3.5 font-bold">Status</th>
-                        <th className="p-3.5 font-bold text-right">Quick Stock Adjustment</th>
+                        <th className="p-3.5 font-bold text-right">Stock Quantity</th>
+                        <th className="p-3.5 font-bold text-right">Full Edit</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-borderSubtle">
@@ -1257,62 +1237,83 @@ export default function AdminDashboardPage() {
                               </Link>
                             </td>
                             <td className="p-3.5 font-medium capitalize text-mutedText">{p.category}</td>
-                            <td className="p-3.5 font-heading font-bold text-sm text-darkText">
-                              <span className={`px-2 py-0.5 rounded font-bold text-xs ${
-                                p.stock === 0 ? 'bg-error-bg text-error' : p.stock < 15 ? 'bg-warning-bg text-warning' : 'bg-surface text-primary'
-                              }`}>
-                                {p.stock} units
-                              </span>
-                            </td>
                             <td className="p-3.5">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                                 p.stock === 0 ? 'bg-error-bg text-error' : p.stock < 15 ? 'bg-warning-bg text-warning' : 'bg-success-bg text-success'
                               }`}>
                                 {p.stock === 0 ? 'Out of Stock' : p.stock < 15 ? 'Low Stock' : 'Optimal'}
                               </span>
                             </td>
                             <td className="p-3.5 text-right">
-                              <div className="inline-flex items-center border border-borderSubtle rounded-lg bg-white overflow-hidden shadow-xs">
-                                <button
-                                  type="button"
-                                  onClick={() => handleAdjustStock(p.id, -1)}
-                                  className="w-8 h-8 flex items-center justify-center font-bold text-darkText hover:bg-surface border-r border-borderSubtle active:bg-surface/80 transition-colors"
-                                  title="Decrease stock by 1"
-                                >
-                                  -1
-                                </button>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={stockInputValues[p.id] !== undefined ? stockInputValues[p.id] : p.stock}
-                                  onChange={(e) => handleStockInputChange(p.id, e.target.value)}
-                                  onBlur={() => handleStockInputCommit(p.id)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      handleStockInputCommit(p.id);
-                                      e.target.blur();
-                                    }
-                                  }}
-                                  className="w-14 h-8 text-center font-heading font-bold text-xs text-darkText bg-transparent outline-none focus:bg-accent/10 focus:text-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                  title="Type custom quantity and press Enter"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => handleAdjustStock(p.id, +1)}
-                                  className="w-8 h-8 flex items-center justify-center font-bold text-darkText hover:bg-surface border-l border-r border-borderSubtle active:bg-surface/80 transition-colors"
-                                  title="Add 1 unit"
-                                >
-                                  +1
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleAdjustStock(p.id, +5)}
-                                  className="px-2.5 h-8 flex items-center justify-center font-bold text-xs text-accent hover:bg-surface active:bg-surface/80 transition-colors"
-                                  title="Add 5 units"
-                                >
-                                  +5
-                                </button>
-                              </div>
+                              {editingStockId === p.id ? (
+                                <div className="inline-flex items-center gap-1.5 justify-end">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    autoFocus
+                                    value={editingStockVal}
+                                    onChange={(e) => setEditingStockVal(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleSaveInlineStock(p.id);
+                                      if (e.key === 'Escape') {
+                                        setEditingStockId(null);
+                                        setEditingStockVal('');
+                                      }
+                                    }}
+                                    className="w-18 h-8 px-2 text-center font-heading font-extrabold text-sm text-primary rounded-lg border-2 border-accent bg-white outline-none shadow-xs"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveInlineStock(p.id)}
+                                    className="h-8 px-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white font-heading font-bold text-xs flex items-center gap-1 transition-colors shadow-xs"
+                                    title="Save stock value (Enter)"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>Save</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingStockId(null);
+                                      setEditingStockVal('');
+                                    }}
+                                    className="w-8 h-8 rounded-lg border border-borderSubtle bg-white hover:bg-surface text-mutedText hover:text-darkText flex items-center justify-center transition-colors"
+                                    title="Cancel (Esc)"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="inline-flex items-center gap-2 justify-end">
+                                  <span className={`px-2.5 py-1 rounded-lg font-heading font-extrabold text-sm ${
+                                    p.stock === 0 ? 'bg-error-bg text-error border border-error/30' : p.stock < 15 ? 'bg-warning-bg text-warning border border-warning/30' : 'bg-surface text-primary border border-borderSubtle'
+                                  }`}>
+                                    {p.stock} <span className="text-xs font-normal text-mutedText">units</span>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingStockId(p.id);
+                                      setEditingStockVal(p.stock.toString());
+                                    }}
+                                    className="p-1.5 rounded-lg border border-borderSubtle bg-white hover:bg-accent/10 hover:border-accent text-mutedText hover:text-accent transition-all flex items-center gap-1 shadow-xs group/edit"
+                                    title="Click to edit stock quantity"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5 group-hover/edit:scale-110 transition-transform" />
+                                    <span className="text-[11px] font-bold text-darkText group-hover/edit:text-accent">Edit</span>
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-3.5 text-right">
+                              <button
+                                type="button"
+                                onClick={() => setEditingProduct(p)}
+                                className="p-1.5 text-mutedText hover:text-primary hover:bg-surface rounded-lg transition-colors"
+                                title="Open Full Product Details Editor (Price, Description, Media)"
+                              >
+                                <Settings className="w-4 h-4" />
+                              </button>
                             </td>
                           </tr>
                         ))
