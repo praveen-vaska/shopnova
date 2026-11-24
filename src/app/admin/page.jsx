@@ -37,7 +37,14 @@ import {
   ChevronDown,
   ShieldCheck,
   ArrowRight,
-  ExternalLink
+  ExternalLink,
+  Mail,
+  Phone,
+  MapPin,
+  CreditCard,
+  Truck,
+  Clock,
+  ChevronRight
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/utils/format';
 
@@ -73,6 +80,8 @@ export default function AdminDashboardPage() {
   const [inventoryStockFilter, setInventoryStockFilter] = useState('all'); // 'all' | 'low' | 'out' | 'optimal'
   const [inventoryCategoryFilter, setInventoryCategoryFilter] = useState('all');
   const [stockInputValues, setStockInputValues] = useState({});
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerSearch, setCustomerSearch] = useState('');
 
   // Load admin session
   React.useEffect(() => {
@@ -447,7 +456,7 @@ export default function AdminDashboardPage() {
         <div>
           {/* Header */}
           <div className="h-18 p-5 border-b border-[#2A2A2A] flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 cursor-default select-none">
               <div className="w-8 h-8 rounded bg-accent flex items-center justify-center text-primary font-bold">
                 <ShoppingBag className="w-4 h-4 text-white" />
               </div>
@@ -459,7 +468,7 @@ export default function AdminDashboardPage() {
                   Admin Control
                 </span>
               </div>
-            </Link>
+            </div>
             <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
               <X className="w-5 h-5" />
             </button>
@@ -1395,31 +1404,443 @@ export default function AdminDashboardPage() {
           )}
 
           {/* TAB 6: CUSTOMERS MANAGEMENT */}
-          {activeTab === 'customers' && (
-            <div className="space-y-6">
-              <div className="bg-white p-5 rounded-xl border border-borderSubtle shadow-subtle">
-                <h3 className="font-heading font-bold text-lg text-primary mb-1">Customer CRM</h3>
-                <p className="text-xs text-mutedText mb-6">Directory of verified shoppers, contact info, and lifetime expenditure.</p>
+          {activeTab === 'customers' && (() => {
+            // Merge initial customers with any additional customers found in orders
+            const customerList = [...initialCustomers];
+            orders.forEach((o) => {
+              if (o.customer?.email) {
+                const emailLower = o.customer.email.toLowerCase();
+                const exists = customerList.some((c) => c.email?.toLowerCase() === emailLower);
+                if (!exists) {
+                  customerList.push({
+                    id: `user-order-${o.orderId}`,
+                    name: o.customer.name || 'Shopper',
+                    email: o.customer.email,
+                    phone: o.customer.phone || '—',
+                    avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop`,
+                    role: 'customer',
+                    joinedDate: formatDate(o.date),
+                    ordersCount: 1,
+                    totalSpent: o.pricing?.total || 0,
+                    addresses: o.shippingAddress ? [o.shippingAddress] : []
+                  });
+                }
+              }
+            });
 
+            // Filter customers by search term
+            const filteredCustomers = customerList.filter((c) => {
+              if (!customerSearch.trim()) return true;
+              const q = customerSearch.toLowerCase();
+              return (
+                c.name.toLowerCase().includes(q) ||
+                c.email.toLowerCase().includes(q) ||
+                (c.phone && c.phone.includes(q))
+              );
+            });
+
+            // Helper to get orders for a specific customer
+            const getCustomerOrders = (email) => {
+              if (!email) return [];
+              const emailLower = email.toLowerCase();
+              return orders.filter((o) => o.customer?.email?.toLowerCase() === emailLower);
+            };
+
+            return (
+              <div className="space-y-6">
+                {/* Header & Customer Search Toolbar */}
+                <div className="bg-white p-5 rounded-xl border border-borderSubtle shadow-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-heading font-bold text-lg text-primary mb-0.5">Customer CRM</h3>
+                    <p className="text-xs text-mutedText">
+                      Directory of verified shoppers, contact info, and lifetime purchase history. Tap any customer to view full order details.
+                    </p>
+                  </div>
+
+                  <div className="relative w-full sm:w-72">
+                    <Search className="w-4 h-4 text-mutedText absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search customers by name, email, phone..."
+                      value={customerSearch}
+                      onChange={(e) => setCustomerSearch(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded border border-borderSubtle outline-none focus:border-accent"
+                    />
+                  </div>
+                </div>
+
+                {/* Customer Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {initialCustomers.map((cust) => (
-                    <div key={cust.id} className="p-5 rounded-lg border border-borderSubtle bg-surface flex items-start gap-4">
-                      <img src={cust.avatar} alt="" className="w-12 h-12 rounded-full object-cover border border-borderSubtle" />
-                      <div className="min-w-0 flex-1">
-                        <h4 className="font-heading font-bold text-sm text-darkText">{cust.name}</h4>
-                        <p className="text-xs text-mutedText truncate">{cust.email}</p>
-                        <p className="text-xs text-mutedText mt-0.5">{cust.phone}</p>
-                        <div className="mt-3 pt-3 border-t border-borderSubtle/60 flex justify-between text-xs">
-                          <span className="text-mutedText">Orders: <strong className="text-darkText">{cust.ordersCount}</strong></span>
-                          <span className="font-bold text-accent">{formatCurrency(cust.totalSpent)}</span>
+                  {filteredCustomers.length === 0 ? (
+                    <div className="col-span-full p-12 text-center bg-white rounded-xl border border-borderSubtle shadow-subtle">
+                      <Users className="w-10 h-10 text-mutedText/30 mx-auto mb-3" />
+                      <p className="font-heading font-bold text-darkText text-sm">No customers found</p>
+                      <p className="text-xs text-mutedText mt-1">
+                        No customer accounts match "{customerSearch}".
+                      </p>
+                      <button
+                        onClick={() => setCustomerSearch('')}
+                        className="mt-3 px-3 py-1.5 bg-primary text-white text-xs font-heading font-semibold rounded hover:bg-primary-hover transition-colors"
+                      >
+                        Clear Search
+                      </button>
+                    </div>
+                  ) : (
+                    filteredCustomers.map((cust) => {
+                      const custOrders = getCustomerOrders(cust.email);
+                      const displayOrdersCount = custOrders.length > 0 ? custOrders.length : (cust.ordersCount || 0);
+                      const displayTotalSpent = custOrders.length > 0 
+                        ? custOrders.reduce((sum, o) => sum + (o.pricing?.total || 0), 0)
+                        : (cust.totalSpent || 0);
+
+                      return (
+                        <div
+                          key={cust.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setSelectedCustomer(cust)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setSelectedCustomer(cust);
+                            }
+                          }}
+                          className="p-5 rounded-xl border border-borderSubtle bg-surface hover:bg-white hover:border-accent hover:shadow-card hover:-translate-y-1 cursor-pointer transition-all duration-300 flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-accent"
+                          title={`Click to view ${cust.name}'s profile and ${displayOrdersCount} orders`}
+                        >
+                          <div>
+                            <div className="flex items-start gap-4">
+                              <img
+                                src={cust.avatar}
+                                alt={cust.name}
+                                className="w-13 h-13 rounded-full object-cover border-2 border-borderSubtle group-hover:border-accent transition-colors shrink-0"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <h4 className="font-heading font-bold text-sm text-darkText group-hover:text-accent transition-colors truncate">
+                                    {cust.name}
+                                  </h4>
+                                  {cust.role === 'admin' ? (
+                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700">Admin</span>
+                                  ) : (
+                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-accent/15 text-accent">Shopper</span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-mutedText truncate mt-0.5 flex items-center gap-1">
+                                  <Mail className="w-3 h-3 text-mutedText/70 shrink-0" />
+                                  <span className="truncate">{cust.email}</span>
+                                </p>
+                                <p className="text-xs text-mutedText mt-0.5 flex items-center gap-1">
+                                  <Phone className="w-3 h-3 text-mutedText/70 shrink-0" />
+                                  <span>{cust.phone}</span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 pt-3 border-t border-borderSubtle/60 flex items-center justify-between text-xs">
+                            <span className="text-mutedText">
+                              Orders: <strong className="text-primary font-bold">{displayOrdersCount}</strong>
+                            </span>
+                            <span className="font-heading font-extrabold text-accent">
+                              {formatCurrency(displayTotalSpent)}
+                            </span>
+                          </div>
+
+                          <div className="mt-2.5 pt-2 border-t border-borderSubtle/40 flex items-center justify-between text-[11px] font-heading font-semibold text-primary group-hover:text-accent transition-colors">
+                            <span>View Orders & Details</span>
+                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* CUSTOMER PROFILE & ORDER DETAILS MODAL */}
+                {selectedCustomer && (() => {
+                  const custOrders = getCustomerOrders(selectedCustomer.email);
+                  const totalSpentCalc = custOrders.length > 0 
+                    ? custOrders.reduce((sum, o) => sum + (o.pricing?.total || 0), 0)
+                    : selectedCustomer.totalSpent || 0;
+                  const ordersCountCalc = custOrders.length > 0 ? custOrders.length : (selectedCustomer.ordersCount || 0);
+
+                  return (
+                    <div 
+                      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fade-in"
+                      onClick={(e) => {
+                        if (e.target === e.currentTarget) setSelectedCustomer(null);
+                      }}
+                    >
+                      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-borderSubtle overflow-hidden max-h-[92vh] flex flex-col my-auto">
+                        {/* Modal Header */}
+                        <div className="p-5 sm:p-6 bg-surface border-b border-borderSubtle flex items-start justify-between gap-4 sticky top-0 z-10">
+                          <div className="flex items-center gap-4">
+                            <img
+                              src={selectedCustomer.avatar}
+                              alt={selectedCustomer.name}
+                              className="w-14 h-14 rounded-full object-cover border-2 border-accent shadow-xs"
+                            />
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="font-heading font-extrabold text-lg sm:text-xl text-primary">
+                                  {selectedCustomer.name}
+                                </h3>
+                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                  selectedCustomer.role === 'admin'
+                                    ? 'bg-purple-100 text-purple-700'
+                                    : 'bg-accent/15 text-accent'
+                                }`}>
+                                  {selectedCustomer.role === 'admin' ? 'Platform Admin' : 'Verified Customer'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 mt-1 text-xs text-mutedText flex-wrap">
+                                <span className="flex items-center gap-1">
+                                  <Mail className="w-3.5 h-3.5 text-accent" />
+                                  <span>{selectedCustomer.email}</span>
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Phone className="w-3.5 h-3.5 text-accent" />
+                                  <span>{selectedCustomer.phone}</span>
+                                </span>
+                                {selectedCustomer.joinedDate && (
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="w-3.5 h-3.5 text-mutedText" />
+                                    <span>Joined {selectedCustomer.joinedDate}</span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => setSelectedCustomer(null)}
+                            className="p-2 text-mutedText hover:text-darkText hover:bg-white rounded-lg transition-colors"
+                            title="Close"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-5 sm:p-6 overflow-y-auto space-y-6">
+                          {/* Summary KPI Cards */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="p-3.5 bg-surface rounded-xl border border-borderSubtle">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-mutedText block mb-1">
+                                Total Orders
+                              </span>
+                              <span className="font-heading font-extrabold text-xl text-primary">
+                                {ordersCountCalc}
+                              </span>
+                            </div>
+                            <div className="p-3.5 bg-surface rounded-xl border border-borderSubtle">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-mutedText block mb-1">
+                                Lifetime Spend
+                              </span>
+                              <span className="font-heading font-extrabold text-xl text-accent">
+                                {formatCurrency(totalSpentCalc)}
+                              </span>
+                            </div>
+                            <div className="p-3.5 bg-surface rounded-xl border border-borderSubtle">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-mutedText block mb-1">
+                                Avg Order Value
+                              </span>
+                              <span className="font-heading font-extrabold text-xl text-primary">
+                                {ordersCountCalc > 0 ? formatCurrency(Math.round(totalSpentCalc / ordersCountCalc)) : '₹0'}
+                              </span>
+                            </div>
+                            <div className="p-3.5 bg-surface rounded-xl border border-borderSubtle">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-mutedText block mb-1">
+                                Account Standing
+                              </span>
+                              <span className="inline-flex items-center gap-1 text-xs font-bold text-success">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Verified Buyer
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Registered Addresses if available */}
+                          {selectedCustomer.addresses && selectedCustomer.addresses.length > 0 && (
+                            <div className="p-4 bg-surface rounded-xl border border-borderSubtle">
+                              <h4 className="font-heading font-bold text-xs uppercase tracking-wider text-mutedText mb-2.5 flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5 text-accent" />
+                                <span>Saved Shipping Addresses</span>
+                              </h4>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {selectedCustomer.addresses.map((addr, idx) => (
+                                  <div key={idx} className="bg-white p-3 rounded-lg border border-borderSubtle text-xs space-y-0.5">
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-bold text-primary">{addr.name || selectedCustomer.name}</span>
+                                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-surface text-mutedText border border-borderSubtle">
+                                        {addr.type || 'Default'}
+                                      </span>
+                                    </div>
+                                    <p className="text-mutedText">{addr.addressLine1}{addr.addressLine2 ? `, ${addr.addressLine2}` : ''}</p>
+                                    <p className="text-mutedText">{addr.city}, {addr.state} - {addr.postalCode}</p>
+                                    <p className="text-[11px] text-mutedText mt-1">Phone: {addr.phone || selectedCustomer.phone}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Orders List & Product Breakdown */}
+                          <div>
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <h4 className="font-heading font-bold text-base text-primary">
+                                  Orders & Purchased Products
+                                </h4>
+                                <p className="text-xs text-mutedText">
+                                  {custOrders.length > 0
+                                    ? `Showing all ${custOrders.length} orders placed by ${selectedCustomer.name} with items, prices, dates & delivery details.`
+                                    : `No purchase orders recorded for ${selectedCustomer.name}.`}
+                                </p>
+                              </div>
+                              <span className="text-xs font-bold text-accent bg-accent/10 px-3 py-1 rounded-full">
+                                {custOrders.length} {custOrders.length === 1 ? 'Order' : 'Orders'}
+                              </span>
+                            </div>
+
+                            {custOrders.length === 0 ? (
+                              <div className="p-8 text-center bg-surface rounded-xl border border-borderSubtle">
+                                <ShoppingBag className="w-10 h-10 text-mutedText/40 mx-auto mb-2" />
+                                <p className="font-heading font-bold text-sm text-darkText">No Orders Placed Yet</p>
+                                <p className="text-xs text-mutedText mt-1">
+                                  This customer has not placed any orders through the storefront yet.
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="space-y-4">
+                                {custOrders.map((ord) => (
+                                  <div
+                                    key={ord.orderId}
+                                    className="bg-white rounded-xl border border-borderSubtle overflow-hidden shadow-xs hover:border-accent/40 transition-colors"
+                                  >
+                                    {/* Order Card Header */}
+                                    <div className="p-4 bg-surface/70 border-b border-borderSubtle flex flex-wrap items-center justify-between gap-3 text-xs">
+                                      <div className="flex items-center gap-3">
+                                        <span className="font-heading font-extrabold text-sm text-primary">
+                                          #{ord.orderId}
+                                        </span>
+                                        <span className="text-mutedText">•</span>
+                                        <span className="text-mutedText flex items-center gap-1">
+                                          <Clock className="w-3.5 h-3.5 text-mutedText" />
+                                          <span>{formatDate(ord.date)}</span>
+                                        </span>
+                                      </div>
+
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white border border-borderSubtle text-darkText flex items-center gap-1">
+                                          <CreditCard className="w-3 h-3 text-accent" />
+                                          <span>{ord.paymentMethod || 'UPI'} ({ord.paymentStatus || 'Paid'})</span>
+                                        </span>
+                                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                          ord.status === 'Delivered'
+                                            ? 'bg-success-bg text-success'
+                                            : ord.status === 'Out for Delivery' || ord.status === 'Shipped'
+                                            ? 'bg-accent/15 text-accent'
+                                            : 'bg-warning-bg text-warning'
+                                        }`}>
+                                          {ord.status}
+                                        </span>
+                                        <span className="font-heading font-extrabold text-sm text-primary ml-1">
+                                          {formatCurrency(ord.pricing?.total)}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Order Items Table/List */}
+                                    <div className="p-4 divide-y divide-borderSubtle/60">
+                                      {ord.items && ord.items.map((item, itemIdx) => (
+                                        <div key={itemIdx} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
+                                          <div className="flex items-center gap-3 min-w-0">
+                                            <img
+                                              src={item.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=200&auto=format&fit=crop'}
+                                              alt={item.name}
+                                              className="w-12 h-12 object-cover rounded-lg bg-surface border border-borderSubtle shrink-0"
+                                            />
+                                            <div className="min-w-0">
+                                              <Link
+                                                href={`/product/${item.productId}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="font-heading font-bold text-xs text-darkText hover:text-accent transition-colors flex items-center gap-1 truncate"
+                                                title="View product in storefront"
+                                              >
+                                                <span>{item.name}</span>
+                                                <ExternalLink className="w-3 h-3 text-mutedText shrink-0" />
+                                              </Link>
+                                              <div className="flex items-center gap-2 text-[11px] text-mutedText mt-0.5 flex-wrap">
+                                                <span>Qty: <strong>{item.quantity}</strong></span>
+                                                <span>•</span>
+                                                <span>Price: {formatCurrency(item.price)}</span>
+                                                {item.selectedSize && (
+                                                  <>
+                                                    <span>•</span>
+                                                    <span>Size: {item.selectedSize}</span>
+                                                  </>
+                                                )}
+                                                {item.selectedColor && (
+                                                  <>
+                                                    <span>•</span>
+                                                    <span>Color: {item.selectedColor}</span>
+                                                  </>
+                                                )}
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <div className="text-right shrink-0">
+                                            <span className="font-heading font-bold text-xs text-primary block">
+                                              {formatCurrency(item.price * item.quantity)}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    {/* Order Card Footer */}
+                                    <div className="px-4 py-2.5 bg-surface/40 border-t border-borderSubtle/60 flex flex-wrap items-center justify-between gap-2 text-[11px] text-mutedText">
+                                      <div className="flex items-center gap-2">
+                                        <Truck className="w-3.5 h-3.5 text-accent" />
+                                        <span>
+                                          Delivery Address: <strong>{ord.shippingAddress?.addressLine1 ? `${ord.shippingAddress.addressLine1}, ${ord.shippingAddress.city}` : ord.shippingAddress?.city || 'India'}</strong> ({ord.deliveryMethod || 'Standard'} delivery)
+                                        </span>
+                                      </div>
+                                      <Link
+                                        href={`/track-order?orderId=${ord.orderId}`}
+                                        target="_blank"
+                                        className="font-heading font-bold text-accent hover:underline flex items-center gap-1 text-[11px]"
+                                      >
+                                        <span>Track Order</span>
+                                        <ArrowRight className="w-3 h-3" />
+                                      </Link>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 bg-surface border-t border-borderSubtle flex justify-end">
+                          <button
+                            onClick={() => setSelectedCustomer(null)}
+                            className="px-5 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-heading font-bold rounded-lg transition-colors shadow-xs"
+                          >
+                            Close Profile
+                          </button>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TAB 7: COUPONS MANAGEMENT */}
           {activeTab === 'coupons' && (

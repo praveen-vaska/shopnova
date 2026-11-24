@@ -405,5 +405,103 @@ export const orders = [
     items: [{ productId: "prod-21", name: "Stainless Insulated Sport Flask", price: 799, quantity: 2 }],
     pricing: { subtotal: 1598, discount: 0, shipping: 0, total: 1598 },
     deliveryMethod: "standard", paymentMethod: "Cash on Delivery", paymentStatus: "Paid", status: "Delivered", estimatedDelivery: "09 Nov 2026"
+  },
+  {
+    orderId: "SN-89221",
+    date: "2026-11-04T10:15:00Z",
+    customer: { name: "Aarav Sharma", email: "aarav.sharma@example.com", phone: "+91 98765 43210" },
+    shippingAddress: { name: "Aarav Sharma", phone: "+91 98765 43210", addressLine1: "B-204, Green Valley Apartments", addressLine2: "Outer Ring Road, Bellandur", city: "Bengaluru", state: "Karnataka", postalCode: "560103", type: "Home" },
+    items: [
+      { productId: "prod-47", name: "Cast Iron Kettlebell 16kg", price: 1999, quantity: 1, selectedSize: "16kg", selectedColor: "Matte Black", image: "https://images.unsplash.com/photo-1586401100295-7a8096fd231a?q=80&w=800&auto=format&fit=crop" },
+      { productId: "prod-48", name: "Seamless Performance Compression Tight", price: 1299, quantity: 1, selectedSize: "M", selectedColor: "Black Obsidian", image: "https://images.unsplash.com/photo-1506152983158-b4a74a01c721?q=80&w=800&auto=format&fit=crop" },
+      { productId: "prod-21", name: "Stainless Insulated Sport Flask", price: 799, quantity: 1, selectedSize: "750ml", selectedColor: "Matte Slate", image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=800&auto=format&fit=crop" }
+    ],
+    pricing: { subtotal: 4097, discount: 302, shipping: 0, total: 3795 },
+    deliveryMethod: "express", paymentMethod: "UPI", paymentStatus: "Paid", status: "Delivered", estimatedDelivery: "06 Nov 2026"
+  },
+  {
+    orderId: "SN-89215",
+    date: "2026-10-28T16:20:00Z",
+    customer: { name: "Aarav Sharma", email: "aarav.sharma@example.com", phone: "+91 98765 43210" },
+    shippingAddress: { name: "Aarav Sharma", phone: "+91 98765 43210", addressLine1: "Tower 4, Embassy Tech Village", addressLine2: "Devarabisanahalli", city: "Bengaluru", state: "Karnataka", postalCode: "560103", type: "Work" },
+    items: [
+      { productId: "prod-44", name: "Everyday Suede Espadrilles", price: 1499, quantity: 1, selectedSize: "UK 9", selectedColor: "Tan Caramel", image: "https://images.unsplash.com/photo-1560343090-f0409e92791a?q=80&w=800&auto=format&fit=crop" },
+      { productId: "prod-45", name: "Full-Grain Leather Cardholder Wallet", price: 899, quantity: 1, selectedSize: "Compact", selectedColor: "Cognac Brown", image: "https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=800&auto=format&fit=crop" },
+      { productId: "prod-41", name: "Clarifying Charcoal Face Polish", price: 849, quantity: 1, selectedSize: "100ml", selectedColor: "Default", image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=800&auto=format&fit=crop" }
+    ],
+    pricing: { subtotal: 3247, discount: 248, shipping: 0, total: 2999 },
+    deliveryMethod: "standard", paymentMethod: "Credit Card", paymentStatus: "Paid", status: "Delivered", estimatedDelivery: "30 Oct 2026"
+  },
+  {
+    orderId: "SN-89219",
+    date: "2026-11-01T11:30:00Z",
+    customer: { name: "Pooja Hegde", email: "pooja.h@example.com", phone: "+91 98112 34567" },
+    shippingAddress: { name: "Pooja Hegde", phone: "+91 98112 34567", addressLine1: "42, Silver Oak Residency, Bandra West", addressLine2: "Near Hill Road", city: "Mumbai", state: "Maharashtra", postalCode: "400050", type: "Home" },
+    items: [
+      { productId: "prod-14", name: "Hydra-Glow Peptide Serum", price: 999, quantity: 1, selectedSize: "30ml", selectedColor: "Standard", image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=800&auto=format&fit=crop" },
+      { productId: "prod-40", name: "Whipped Shea Body Butter", price: 799, quantity: 2, selectedSize: "200g", selectedColor: "Natural Shea", image: "https://images.unsplash.com/photo-1608248597359-59749fb25488?q=80&w=800&auto=format&fit=crop" },
+      { productId: "prod-15", name: "Silk Sleep Eye Mask", price: 1957, quantity: 1, selectedSize: "One Size", selectedColor: "Midnight Navy", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=800&auto=format&fit=crop" }
+    ],
+    pricing: { subtotal: 4554, discount: 0, shipping: 0, total: 4554 },
+    deliveryMethod: "express", paymentMethod: "UPI", paymentStatus: "Paid", status: "Delivered", estimatedDelivery: "03 Nov 2026"
+  },
+  {
+    orderId: "SN-89214",
+    date: "2026-10-24T14:45:00Z",
+    customer: { name: "Pooja Hegde", email: "pooja.h@example.com", phone: "+91 98112 34567" },
+    shippingAddress: { name: "Pooja Hegde", phone: "+91 98112 34567", addressLine1: "42, Silver Oak Residency, Bandra West", addressLine2: "Near Hill Road", city: "Mumbai", state: "Maharashtra", postalCode: "400050", type: "Home" },
+    items: [
+      { productId: "prod-49", name: "Japanese Damascus Knife 7-Inch", price: 2899, quantity: 1, selectedSize: "7-Inch", selectedColor: "Damascus Steel", image: "https://images.unsplash.com/photo-1593618998160-e34014e67546?q=80&w=800&auto=format&fit=crop" },
+      { productId: "prod-23", name: "Ceramic Pour-Over Coffee Dripper", price: 1000, quantity: 1, selectedSize: "1-4 Cups", selectedColor: "Matte White", image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=800&auto=format&fit=crop" }
+    ],
+    pricing: { subtotal: 3899, discount: 0, shipping: 0, total: 3899 },
+    deliveryMethod: "standard", paymentMethod: "Credit Card", paymentStatus: "Paid", status: "Delivered", estimatedDelivery: "27 Oct 2026"
+  },
+  {
+    orderId: "SN-89210",
+    date: "2026-10-18T09:15:00Z",
+    customer: { name: "Pooja Hegde", email: "pooja.h@example.com", phone: "+91 98112 34567" },
+    shippingAddress: { name: "Pooja Hegde", phone: "+91 98112 34567", addressLine1: "42, Silver Oak Residency, Bandra West", addressLine2: "Near Hill Road", city: "Mumbai", state: "Maharashtra", postalCode: "400050", type: "Home" },
+    items: [
+      { productId: "prod-46", name: "Titanium Polarized Sunglasses", price: 2299, quantity: 1, selectedSize: "Medium", selectedColor: "Matte Gold", image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=800&auto=format&fit=crop" },
+      { productId: "prod-18", name: "Minimalist Leather Tote Bag", price: 1500, quantity: 1, selectedSize: "Standard", selectedColor: "Dusty Rose", image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=800&auto=format&fit=crop" }
+    ],
+    pricing: { subtotal: 3799, discount: 299, shipping: 0, total: 3500 },
+    deliveryMethod: "express", paymentMethod: "UPI", paymentStatus: "Paid", status: "Delivered", estimatedDelivery: "20 Oct 2026"
+  },
+  {
+    orderId: "SN-89205",
+    date: "2026-10-10T17:40:00Z",
+    customer: { name: "Pooja Hegde", email: "pooja.h@example.com", phone: "+91 98112 34567" },
+    shippingAddress: { name: "Pooja Hegde", phone: "+91 98112 34567", addressLine1: "42, Silver Oak Residency, Bandra West", addressLine2: "Near Hill Road", city: "Mumbai", state: "Maharashtra", postalCode: "400050", type: "Home" },
+    items: [
+      { productId: "prod-4", name: "Pure Cashmere Ribbed Scarf", price: 2400, quantity: 1, selectedSize: "One Size", selectedColor: "Oatmeal Melange", image: "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?q=80&w=800&auto=format&fit=crop" },
+      { productId: "prod-13", name: "Scented Soy Candle Amber & Oak", price: 800, quantity: 1, selectedSize: "250g", selectedColor: "Amber Glass", image: "https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=800&auto=format&fit=crop" }
+    ],
+    pricing: { subtotal: 3200, discount: 0, shipping: 0, total: 3200 },
+    deliveryMethod: "standard", paymentMethod: "Credit Card", paymentStatus: "Paid", status: "Delivered", estimatedDelivery: "13 Oct 2026"
+  },
+  {
+    orderId: "SN-89218",
+    date: "2026-11-02T13:25:00Z",
+    customer: { name: "Vikram Malhotra", email: "vikram.m@example.com", phone: "+91 97234 56789" },
+    shippingAddress: { name: "Vikram Malhotra", phone: "+91 97234 56789", addressLine1: "Villa 18, Palm Meadows", addressLine2: "Whitefield", city: "Bengaluru", state: "Karnataka", postalCode: "560066", type: "Home" },
+    items: [
+      { productId: "prod-42", name: "Italian Leather Penny Loafers", price: 3499, quantity: 1, selectedSize: "UK 10", selectedColor: "Espresso Brown", image: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?q=80&w=800&auto=format&fit=crop" }
+    ],
+    pricing: { subtotal: 3499, discount: 0, shipping: 0, total: 3499 },
+    deliveryMethod: "express", paymentMethod: "UPI", paymentStatus: "Paid", status: "Delivered", estimatedDelivery: "04 Nov 2026"
+  },
+  {
+    orderId: "SN-89212",
+    date: "2026-10-20T11:05:00Z",
+    customer: { name: "Vikram Malhotra", email: "vikram.m@example.com", phone: "+91 97234 56789" },
+    shippingAddress: { name: "Vikram Malhotra", phone: "+91 97234 56789", addressLine1: "Villa 18, Palm Meadows", addressLine2: "Whitefield", city: "Bengaluru", state: "Karnataka", postalCode: "560066", type: "Home" },
+    items: [
+      { productId: "prod-2", name: "Chunky Knit Merino Sweater", price: 1299, quantity: 1, selectedSize: "L", selectedColor: "Charcoal Heather", image: "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?q=80&w=800&auto=format&fit=crop" },
+      { productId: "prod-21", name: "Stainless Insulated Sport Flask", price: 793, quantity: 1, selectedSize: "750ml", selectedColor: "Brushed Steel", image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=800&auto=format&fit=crop" }
+    ],
+    pricing: { subtotal: 2092, discount: 0, shipping: 0, total: 2092 },
+    deliveryMethod: "standard", paymentMethod: "Credit Card", paymentStatus: "Paid", status: "Delivered", estimatedDelivery: "22 Oct 2026"
   }
 ];
