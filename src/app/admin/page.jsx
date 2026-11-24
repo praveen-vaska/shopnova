@@ -35,7 +35,8 @@ import {
   X,
   Calendar,
   ChevronDown,
-  ShieldCheck
+  ShieldCheck,
+  ArrowRight
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/utils/format';
 
@@ -661,6 +662,13 @@ export default function AdminDashboardPage() {
                       </div>
                     ))}
                   </div>
+
+                  <button
+                    onClick={() => setActiveTab('categories')}
+                    className="w-full mt-5 py-2 border border-borderSubtle rounded text-xs font-heading font-semibold text-darkText hover:bg-surface text-center block transition-colors"
+                  >
+                    View Category Architecture →
+                  </button>
                 </div>
               </div>
 
@@ -760,10 +768,13 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setProductCategoryFilter(e.target.value)}
                     className="py-2 px-3 text-xs rounded border border-borderSubtle bg-white font-semibold cursor-pointer"
                   >
-                    <option value="all">All Categories</option>
-                    {initialCategories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
+                    <option value="all">All Categories ({products.length})</option>
+                    {initialCategories.map(c => {
+                      const count = products.filter(p => p.category === c.id).length;
+                      return (
+                        <option key={c.id} value={c.id}>{c.name} ({count})</option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -775,6 +786,38 @@ export default function AdminDashboardPage() {
                   <span>Add New Product</span>
                 </button>
               </div>
+
+              {/* Active Category Filter Banner (shown when filtered from category card or select) */}
+              {productCategoryFilter !== 'all' && (
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-accent/10 border border-accent/30 px-4 py-3 rounded-xl text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                    <span className="font-heading font-bold text-primary">Category View:</span>
+                    <span className="px-3 py-1 rounded-full bg-accent text-white font-bold text-xs shadow-xs">
+                      {initialCategories.find(c => c.id === productCategoryFilter)?.name || productCategoryFilter}
+                    </span>
+                    <span className="text-mutedText">
+                      • Showing {filteredAdminProducts.length} of {products.filter(p => p.category === productCategoryFilter).length} products
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setActiveTab('categories')}
+                      className="text-xs font-heading font-semibold text-mutedText hover:text-primary transition-colors flex items-center gap-1 px-2.5 py-1 rounded hover:bg-white"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Back to Categories</span>
+                    </button>
+                    <button
+                      onClick={() => setProductCategoryFilter('all')}
+                      className="px-3 py-1 bg-white hover:bg-surface border border-borderSubtle text-primary hover:text-accent font-heading font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-xs"
+                    >
+                      <span>Show All Products ({products.length})</span>
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Products Table */}
               <div className="bg-white rounded-xl border border-borderSubtle shadow-subtle overflow-hidden">
@@ -791,62 +834,84 @@ export default function AdminDashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-borderSubtle">
-                      {filteredAdminProducts.map((p) => (
-                        <tr key={p.id} className="hover:bg-surface/50">
-                          <td className="p-3.5">
-                            <div className="flex items-center gap-3">
-                              <img src={p.images[0]} alt="" className="w-11 h-12 object-cover rounded bg-surface" />
-                              <div>
-                                <p className="font-bold text-darkText truncate max-w-xs">{p.name}</p>
-                                <p className="text-[11px] text-mutedText">{p.brand} • {p.id}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-3.5 font-medium capitalize text-mutedText">{p.category}</td>
-                          <td className="p-3.5 font-bold text-darkText">{formatCurrency(p.price)}</td>
-                          <td className="p-3.5">
-                            {p.discount > 0 ? (
-                              <span className="text-error font-bold">{p.discount}% Off</span>
-                            ) : (
-                              <span className="text-mutedText">—</span>
+                      {filteredAdminProducts.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="p-12 text-center text-mutedText">
+                            <Package className="w-10 h-10 text-mutedText/30 mx-auto mb-3" />
+                            <p className="font-heading font-bold text-darkText text-sm">No products found</p>
+                            <p className="text-xs text-mutedText mt-1 max-w-sm mx-auto">
+                              {productCategoryFilter !== 'all'
+                                ? `No products match the selected category (${initialCategories.find(c => c.id === productCategoryFilter)?.name || productCategoryFilter}) with your current search criteria.`
+                                : 'No products match your search query.'}
+                            </p>
+                            {productCategoryFilter !== 'all' && (
+                              <button
+                                onClick={() => setProductCategoryFilter('all')}
+                                className="mt-4 px-4 py-2 bg-primary text-white text-xs font-heading font-semibold rounded-lg hover:bg-primary-hover transition-colors"
+                              >
+                                View All Products ({products.length})
+                              </button>
                             )}
                           </td>
-                          <td className="p-3.5">
-                            <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${
-                              p.stock === 0 ? 'bg-error-bg text-error' : p.stock < 15 ? 'bg-warning-bg text-warning' : 'bg-success-bg text-success'
-                            }`}>
-                              {p.stock} units
-                            </span>
-                          </td>
-                          <td className="p-3.5 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={() => setEditingProduct(p)}
-                                className="p-1.5 text-mutedText hover:text-primary transition-colors"
-                                title="Edit product"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  confirmAction({
-                                    title: 'Delete Product',
-                                    message: `Are you sure you want to permanently delete "${p.name}"? This item will be removed from your catalog and database.`,
-                                    confirmText: 'Yes, Delete',
-                                    cancelText: 'Keep Product',
-                                    type: 'danger',
-                                    onConfirm: () => deleteProduct(p.id)
-                                  });
-                                }}
-                                className="p-1.5 text-mutedText hover:text-error transition-colors"
-                                title="Delete product"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredAdminProducts.map((p) => (
+                          <tr key={p.id} className="hover:bg-surface/50">
+                            <td className="p-3.5">
+                              <div className="flex items-center gap-3">
+                                <img src={p.images[0]} alt="" className="w-11 h-12 object-cover rounded bg-surface" />
+                                <div>
+                                  <p className="font-bold text-darkText truncate max-w-xs">{p.name}</p>
+                                  <p className="text-[11px] text-mutedText">{p.brand} • {p.id}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-3.5 font-medium capitalize text-mutedText">{p.category}</td>
+                            <td className="p-3.5 font-bold text-darkText">{formatCurrency(p.price)}</td>
+                            <td className="p-3.5">
+                              {p.discount > 0 ? (
+                                <span className="text-error font-bold">{p.discount}% Off</span>
+                              ) : (
+                                <span className="text-mutedText">—</span>
+                              )}
+                            </td>
+                            <td className="p-3.5">
+                              <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${
+                                p.stock === 0 ? 'bg-error-bg text-error' : p.stock < 15 ? 'bg-warning-bg text-warning' : 'bg-success-bg text-success'
+                              }`}>
+                                {p.stock} units
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => setEditingProduct(p)}
+                                  className="p-1.5 text-mutedText hover:text-primary transition-colors"
+                                  title="Edit product"
+                                >
+                                  <Edit3 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    confirmAction({
+                                      title: 'Delete Product',
+                                      message: `Are you sure you want to permanently delete "${p.name}"? This item will be removed from your catalog and database.`,
+                                      confirmText: 'Yes, Delete',
+                                      cancelText: 'Keep Product',
+                                      type: 'danger',
+                                      onConfirm: () => deleteProduct(p.id)
+                                    });
+                                  }}
+                                  className="p-1.5 text-mutedText hover:text-error transition-colors"
+                                  title="Delete product"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -858,22 +923,73 @@ export default function AdminDashboardPage() {
           {activeTab === 'categories' && (
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-xl border border-borderSubtle shadow-subtle">
-                <h3 className="font-heading font-bold text-lg text-primary mb-2">Category Architecture</h3>
-                <p className="text-xs text-mutedText mb-6">Manage all 8 official marketplace retail divisions.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                  <div>
+                    <h3 className="font-heading font-bold text-lg text-primary">Category Architecture</h3>
+                    <p className="text-xs text-mutedText mt-0.5">
+                      Manage all 8 official marketplace retail divisions. Tap any category card to view its products catalog.
+                    </p>
+                  </div>
+                  <div className="text-xs text-mutedText bg-surface px-3 py-1.5 rounded-lg border border-borderSubtle self-start sm:self-auto">
+                    <span className="font-bold text-primary">{products.length}</span> Total Products cataloged
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {initialCategories.map((c) => (
-                    <div key={c.id} className="p-4 rounded-lg border border-borderSubtle bg-surface flex flex-col justify-between">
-                      <div className="aspect-[4/3] rounded overflow-hidden mb-3 bg-white">
-                        <img src={c.image} alt="" className="w-full h-full object-cover" />
+                  {initialCategories.map((c) => {
+                    const categoryProducts = products.filter(p => p.category === c.id);
+                    const count = categoryProducts.length;
+
+                    return (
+                      <div
+                        key={c.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          setProductCategoryFilter(c.id);
+                          setActiveTab('products');
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setProductCategoryFilter(c.id);
+                            setActiveTab('products');
+                          }
+                        }}
+                        className="p-4 rounded-xl border border-borderSubtle bg-surface hover:bg-white hover:border-accent hover:shadow-card hover:-translate-y-1 cursor-pointer transition-all duration-300 flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-accent"
+                        title={`Click to view all ${count} products in ${c.name}`}
+                      >
+                        <div>
+                          <div className="aspect-[4/3] rounded-lg overflow-hidden mb-3 bg-white relative">
+                            <img
+                              src={c.image}
+                              alt={c.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute top-2.5 right-2.5 bg-primary/85 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-0.5 rounded shadow-sm">
+                              {count} {count === 1 ? 'Product' : 'Products'}
+                            </div>
+                          </div>
+                          <h4 className="font-heading font-bold text-sm text-darkText group-hover:text-accent transition-colors">
+                            {c.name}
+                          </h4>
+                          <p className="text-xs text-mutedText line-clamp-1 mt-0.5 mb-2">
+                            {c.description}
+                          </p>
+                        </div>
+
+                        <div className="pt-3 border-t border-borderSubtle/60 flex items-center justify-between text-xs mt-3">
+                          <span className="text-[11px] font-bold text-accent">
+                            {count} Active {count === 1 ? 'Product' : 'Products'}
+                          </span>
+                          <span className="font-heading font-bold text-xs text-primary group-hover:text-accent flex items-center gap-1 transition-colors">
+                            <span>View</span>
+                            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                          </span>
+                        </div>
                       </div>
-                      <h4 className="font-heading font-bold text-sm text-darkText">{c.name}</h4>
-                      <p className="text-xs text-mutedText line-clamp-1 mt-0.5 mb-2">{c.description}</p>
-                      <span className="text-[11px] font-bold text-accent">
-                        {products.filter(p => p.category === c.id).length} Active Products
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
