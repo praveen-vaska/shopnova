@@ -1,17 +1,28 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
-import { ShoppingBag, Search, User, Heart, ChevronDown, Menu, X, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Search, User, Heart, ChevronDown, Menu, X } from 'lucide-react';
 import { categories } from '@/data/categories';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { cartItemCount, wishlist, setIsCartDrawerOpen, setIsSearchOpen, setIsAuthModalOpen, user } = useShop();
+  const { products, cartItemCount, wishlist, setIsCartDrawerOpen, setIsSearchOpen } = useShop();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+  const categoryCounts = useMemo(() => {
+    const counts = {};
+    (products || []).forEach((p) => {
+      if (p?.category) {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [products]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,9 +32,10 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu on route change
+  // Close mobile menu and dropdowns on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setOpenDropdown(null);
   }, [pathname]);
 
   const navLinks = [
@@ -34,6 +46,11 @@ export default function Navbar() {
     { label: 'Best Sellers', href: '/shop?filter=bestseller' },
     { label: 'Offers', href: '/shop?filter=discount' },
   ];
+
+  const closeAllMenus = () => {
+    setOpenDropdown(null);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <header
@@ -67,16 +84,29 @@ export default function Navbar() {
         <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
+            const hasMenu = link.hasDropdown || link.hasCategories;
+            const isOpen = hasMenu && openDropdown === link.label;
+
             return (
-              <div key={link.label} className="relative group">
+              <div
+                key={link.label}
+                className="relative"
+                onMouseEnter={() => hasMenu && setOpenDropdown(link.label)}
+                onMouseLeave={() => hasMenu && setOpenDropdown(null)}
+              >
                 <Link
                   href={link.href}
+                  onClick={() => setOpenDropdown(null)}
                   className={`flex items-center gap-1 font-heading text-[15px] font-semibold transition-colors py-2 ${isActive ? 'text-primary' : 'text-darkText hover:text-accent'
                     }`}
                 >
                   {link.label}
-                  {(link.hasDropdown || link.hasCategories) && (
-                    <ChevronDown className="w-3.5 h-3.5 text-mutedText group-hover:text-accent transition-transform group-hover:rotate-180" />
+                  {hasMenu && (
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform ${
+                        isOpen ? 'text-accent rotate-180' : 'text-mutedText'
+                      }`}
+                    />
                   )}
                 </Link>
 
@@ -85,34 +115,50 @@ export default function Navbar() {
                   <span className="absolute bottom-0 left-0 w-full h-[2px] bg-accent rounded-full" />
                 )}
 
-                {/* Dropdown Menu for Shop / Categories */}
+                {/* Dropdown Menu for Shop */}
                 {link.hasDropdown && (
-                  <div className="absolute top-full left-0 w-56 bg-white border border-borderSubtle rounded-md shadow-hover py-3 px-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-50">
-                    <Link href="/shop" className="block px-3 py-2 text-sm font-semibold text-darkText hover:text-accent hover:bg-surface rounded-sm transition-colors">
-                      All Products
+                  <div
+                    className={`absolute top-full left-0 w-56 bg-white border border-borderSubtle rounded-md shadow-hover py-3 px-2 transition-all duration-200 z-50 ${
+                      isOpen
+                        ? 'opacity-100 visible translate-y-0 pointer-events-auto'
+                        : 'opacity-0 invisible translate-y-2 pointer-events-none'
+                    }`}
+                  >
+                    <Link href="/shop" onClick={closeAllMenus} className="block px-3 py-2 text-sm font-semibold text-darkText hover:text-accent hover:bg-surface rounded-sm transition-colors">
+                      All Products ({products.length})
                     </Link>
-                    <Link href="/shop?filter=new" className="block px-3 py-2 text-sm text-darkText hover:text-accent hover:bg-surface rounded-sm transition-colors">
+                    <Link href="/shop?filter=new" onClick={closeAllMenus} className="block px-3 py-2 text-sm text-darkText hover:text-accent hover:bg-surface rounded-sm transition-colors">
                       New Arrivals
                     </Link>
-                    <Link href="/shop?filter=bestseller" className="block px-3 py-2 text-sm text-darkText hover:text-accent hover:bg-surface rounded-sm transition-colors">
+                    <Link href="/shop?filter=bestseller" onClick={closeAllMenus} className="block px-3 py-2 text-sm text-darkText hover:text-accent hover:bg-surface rounded-sm transition-colors">
                       Best Sellers
                     </Link>
-                    <Link href="/shop?filter=discount" className="block px-3 py-2 text-sm text-darkText hover:text-accent hover:bg-surface rounded-sm transition-colors">
+                    <Link href="/shop?filter=discount" onClick={closeAllMenus} className="block px-3 py-2 text-sm text-darkText hover:text-accent hover:bg-surface rounded-sm transition-colors">
                       Sale & Special Deals
                     </Link>
                   </div>
                 )}
 
+                {/* Dropdown Menu for Categories */}
                 {link.hasCategories && (
-                  <div className="absolute top-full -left-12 w-72 bg-white border border-borderSubtle rounded-md shadow-hover py-3 px-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-50 grid grid-cols-1 gap-1">
+                  <div
+                    className={`absolute top-full left-0 w-72 bg-white border border-borderSubtle rounded-md shadow-hover py-3 px-2 transition-all duration-200 z-50 grid grid-cols-1 gap-1 ${
+                      isOpen
+                        ? 'opacity-100 visible translate-y-0 pointer-events-auto'
+                        : 'opacity-0 invisible translate-y-2 pointer-events-none'
+                    }`}
+                  >
                     {categories.map((cat) => (
                       <Link
                         key={cat.id}
                         href={`/shop?category=${cat.id}`}
+                        onClick={closeAllMenus}
                         className="flex items-center justify-between px-3 py-2 text-sm text-darkText hover:text-accent hover:bg-surface rounded-sm transition-colors"
                       >
                         <span className="font-medium">{cat.name}</span>
-                        <span className="text-xs text-mutedText font-normal">({cat.itemCount})</span>
+                        <span className="text-xs text-mutedText font-normal">
+                          ({categoryCounts[cat.id] ?? 0})
+                        </span>
                       </Link>
                     ))}
                   </div>
@@ -180,6 +226,7 @@ export default function Navbar() {
               <Link
                 key={link.label}
                 href={link.href}
+                onClick={closeAllMenus}
                 className="py-2.5 text-base font-semibold text-darkText border-b border-borderSubtle/60 flex items-center justify-between"
               >
                 <span>{link.label}</span>
@@ -192,18 +239,20 @@ export default function Navbar() {
                   <Link
                     key={c.id}
                     href={`/shop?category=${c.id}`}
-                    className="p-2 text-xs font-medium bg-surface rounded text-darkText hover:text-accent"
+                    onClick={closeAllMenus}
+                    className="p-2 text-xs font-medium bg-surface rounded text-darkText hover:text-accent flex items-center justify-between"
                   >
-                    {c.name}
+                    <span className="truncate">{c.name}</span>
+                    <span className="text-[11px] text-mutedText ml-1">({categoryCounts[c.id] ?? 0})</span>
                   </Link>
                 ))}
               </div>
             </div>
             <div className="pt-4 border-t border-borderSubtle flex items-center justify-between">
-              <Link href="/account" className="text-sm font-semibold text-darkText">
+              <Link href="/account" onClick={closeAllMenus} className="text-sm font-semibold text-darkText">
                 My Profile
               </Link>
-              <Link href="/wishlist" className="text-sm font-semibold text-accent">
+              <Link href="/wishlist" onClick={closeAllMenus} className="text-sm font-semibold text-accent">
                 Saved Items ({wishlist.length})
               </Link>
             </div>

@@ -6,7 +6,7 @@ export const categories = [
     slug: "fashion",
     description: "Curated apparel, coats & timeless wardrobe essentials",
     image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop",
-    itemCount: 12,
+    itemCount: 11,
     featured: true
   },
   {
@@ -36,7 +36,7 @@ export const categories = [
     slug: "beauty",
     description: "Clean organic skincare, fragrances & luxury wellness",
     image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=800&auto=format&fit=crop",
-    itemCount: 6,
+    itemCount: 5,
     featured: true
   },
   {
@@ -46,7 +46,7 @@ export const categories = [
     slug: "footwear",
     description: "Handcrafted sneakers, leather loafers & everyday boots",
     image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=800&auto=format&fit=crop",
-    itemCount: 6,
+    itemCount: 5,
     featured: true
   },
   {
@@ -56,7 +56,7 @@ export const categories = [
     slug: "accessories",
     description: "Minimalist leather bags, luxury chronographs & jewellery",
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=800&auto=format&fit=crop",
-    itemCount: 5,
+    itemCount: 4,
     featured: true
   },
   {
@@ -66,7 +66,7 @@ export const categories = [
     slug: "sports-fitness",
     description: "High-performance activewear, gear & fitness essentials",
     image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop",
-    itemCount: 5,
+    itemCount: 4,
     featured: false
   },
   {
